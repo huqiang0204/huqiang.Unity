@@ -1,4 +1,6 @@
 ﻿using huqiang.Data;
+using huqiang.UI;
+using huqiang.UIEvent;
 using huqiang.UIModel;
 using UGUI;
 using UnityEngine;
@@ -26,33 +28,39 @@ namespace huqiang
             }
         }
         static RectTransform UIRoot;
-        public static void Initial()
+        public static void Initial(Transform uiRoot)
         {
             InitialA();
-            //if(uiRoot==null)
-            //{
-            //    var ui = new GameObject("UI", typeof(Canvas));
-            //    ui.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            //    UIRoot = new GameObject("uiRoot",typeof(RectTransform)).transform as RectTransform;
-            //    UIRoot.SetParent(ui.transform);
-            //    UIRoot.localPosition = Vector3.zero;
-            //}else  UIRoot = uiRoot;
-            Page.Root = new UI.UIElement();
-            var buff = new GameObject("buffer",typeof(Canvas));
-            buff.SetActive(false);
-            ModelManager.CycleBuffer = buff.transform;
-            EventCallBack.InsertRoot(UIRoot.root as RectTransform);
+            if (uiRoot == null)
+            {
+                uiRoot = new GameObject("UI", typeof(Canvas)).transform;
+                uiRoot.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                UIRoot = new GameObject("uiRoot", typeof(RectTransform)).transform as RectTransform;
+            }
+            Page.Root = new UIElement();
+            Page.Root.Context = new GameObject("uiRoot",typeof(RectTransform)).transform as RectTransform;
+            Page.Root.Context.SetParent(uiRoot);
+            ModelManagerUI.Initial();
+            BaseEvent.InsertRoot(Page.Root);
         }
         public static float AllTime;
         public static void Update()
         {
-            AnimationManage.Manage.Update();
-            UserAction.DispatchEvent();
+            //AnimationManage.Manage.Update();
+            //UserAction.DispatchEvent();
+            UserInput.DispatchEvent();
+            ThreadPool.AddMission(SubThread,null);
             ThreadPool.ExtcuteMain();
-            Resize();
-            Page.Refresh(UserAction.TimeSlice);
+            Page.Root.Apply();
+            //Resize();
+            //Page.Refresh(UserAction.TimeSlice);
             AllTime += Time.deltaTime;
-            DownloadManager.UpdateMission();
+            //DownloadManager.UpdateMission();
+        }
+        static void SubThread(object obj)
+        {
+            UserInput.SubDispatch();
+            Page.Refresh(UserInput.TimeSlice);
         }
         static void Resize()
         {

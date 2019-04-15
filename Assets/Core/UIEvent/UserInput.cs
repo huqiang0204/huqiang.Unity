@@ -224,7 +224,7 @@ namespace huqiang.UIEvent
             if (Frame >= 16)
                 Frame = 0;
         }
-        static void SubDispatch(object obj)
+        public static void SubDispatch()
         {
 #if DEBUG
             try
@@ -430,7 +430,6 @@ namespace huqiang.UIEvent
             {
                 DispatchWin();
             }
-            ThreadPool.AddMission(SubDispatch,null);
             //TextInputEvent.Dispatch();
             //GestureEvent.Dispatch(new List<UserInput>(inputs));
         }

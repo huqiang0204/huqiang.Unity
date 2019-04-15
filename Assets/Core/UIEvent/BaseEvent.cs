@@ -11,6 +11,28 @@ namespace huqiang.UIEvent
     {
         static List<BaseEvent> events=new List<BaseEvent>();
         static List<UIElement> Roots;
+        public static void InsertRoot(UIElement ui, int index = 0)
+        {
+            if (ui == null)
+                return;
+            if (Roots == null)
+            {
+                Roots = new List<UIElement>();
+                Roots.Add(ui);
+                return;
+            }
+            for (int i = 0; i < Roots.Count; i++)
+            {
+                if (ui == Roots[i])
+                {
+                    Roots.RemoveAt(i);
+                    break;
+                }
+            }
+            if (index > Roots.Count)
+                index = Roots.Count;
+            Roots.Insert(index, ui);
+        }
         public static T RegEvent<T>(UIElement element)where T:BaseEvent,new()
         {
             for(int i=0;i<events.Count;i++)
