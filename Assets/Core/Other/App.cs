@@ -40,6 +40,8 @@ namespace huqiang
             Page.Root = new UI.ModelElement();
             Page.Root.Context = new GameObject("uiRoot",typeof(RectTransform)).transform as RectTransform;
             Page.Root.Context.SetParent(uiRoot);
+            Page.Root.Context.localPosition = Vector3.zero;
+            Page.Root.Context.localScale = Vector3.one;
             ModelManagerUI.Initial();
             BaseEvent.InsertRoot(Page.Root);
         }

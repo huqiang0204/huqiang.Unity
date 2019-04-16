@@ -71,7 +71,7 @@ namespace huqiang.UI
                     var fs = buff.GetData(chi[i]) as FakeStruct;
                     if (fs != null)
                     {
-                        var son = (ElementData*)fake.ip;
+                        var son = (ElementData*)fs.ip;
                        var n = buff.GetData(son->name) as string;
                         if (n == name)
                             return fs;
@@ -134,9 +134,6 @@ namespace huqiang.UI
         static void LoadToObject(RectTransform com,ref ElementData data,ModelElement ui)
         {
             var trans = com as RectTransform;
-            trans.localRotation = data.localRotation;
-            trans.localPosition = data.localPosition;
-            trans.localScale = data.localScale;
             trans.anchoredPosition = data.anchoredPosition;
             trans.anchoredPosition3D = data.anchoredPosition3D;
             trans.anchorMax = data.anchorMax;
@@ -145,6 +142,9 @@ namespace huqiang.UI
             trans.offsetMin = data.offsetMin;
             trans.pivot = data.pivot;
             trans.sizeDelta = data.sizeDelta;
+            trans.localRotation = data.localRotation;
+            trans.localPosition = data.localPosition;
+            trans.localScale = data.localScale;
             trans.name = ui.name;
             trans.tag = ui.tag;
         }
@@ -429,6 +429,7 @@ namespace huqiang.UI
                 }
                 else if (IsChanged)
                 {
+                    IsChanged = false;
                     LoadToObject(Context, ref data, this);
                 }
                 for (int i = 0; i < components.Count; i++)
