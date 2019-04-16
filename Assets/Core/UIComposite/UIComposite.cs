@@ -8,6 +8,6 @@ namespace huqiang.UIComposite
 {
     public class UIComposite
     {
-        public virtual void Initial(UIElement rect) { }
+        public virtual void Initial(ModelElement rect) { }
     }
 }

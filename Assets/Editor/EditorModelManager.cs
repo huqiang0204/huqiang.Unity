@@ -1,11 +1,13 @@
 ﻿using huqiang;
-using huqiang.UIModel;
+using huqiang.UI;
+using huqiang.UIComposite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EditorModelManager
 {
@@ -34,8 +36,8 @@ public class EditorModelManager
                 var str = ss[ss.Length - 1];
                 ss = str.Split('.');
                 var sp = AssetDatabase.LoadAllAssetsAtPath(path);
-                if(sp!=null)
-                    if(sp.Length>0)
+                if (sp != null)
+                    if (sp.Length > 0)
                     {
                         objects.Add(sp);
                         return sp;
@@ -51,9 +53,9 @@ public class EditorModelManager
             var objs = objects[i];
             if (objs != null)
             {
-                if(objs.Length>0)
-                if (objs[0].name == tname)
-                    return objs[0] as Texture;
+                if (objs.Length > 0)
+                    if (objs[0].name == tname)
+                        return objs[0] as Texture;
             }
         }
         var os = LoadSprite(tname);
@@ -71,17 +73,17 @@ public class EditorModelManager
             var objs = objects[i];
             if (objs != null)
             {
-                if(objs.Length>0)
-                    if (objs[0] !=null)
+                if (objs.Length > 0)
+                    if (objs[0] != null)
                         if (objs[0].name == tname)
-                {
-                    for (int j = 1; j < objs.Length; j++)
-                    {
-                                if(objs[j]!=null)
-                        if (objs[j].name == name)
-                            return objs[j] as Sprite;
-                    }
-                }
+                        {
+                            for (int j = 1; j < objs.Length; j++)
+                            {
+                                if (objs[j] != null)
+                                    if (objs[j].name == name)
+                                        return objs[j] as Sprite;
+                            }
+                        }
             }
         }
         var os = LoadSprite(tname);
@@ -91,9 +93,9 @@ public class EditorModelManager
             {
                 for (int j = 1; j < os.Length; j++)
                 {
-                    if(os[j]!=null)
-                    if (os[j].name == name)
-                        return os[j] as Sprite;
+                    if (os[j] != null)
+                        if (os[j].name == name)
+                            return os[j] as Sprite;
                 }
             }
         }
@@ -106,7 +108,7 @@ public class EditorModelManager
     }
     public static ModelElement LoadToGame(string mod, object o, Transform parent, string filter = "mod")
     {
-        var m = ModelManager.FindModel(mod);
+        var m = ModelManagerUI.FindModel(mod);
         LoadToGame(m, o, parent, filter);
         return m;
     }
@@ -121,7 +123,7 @@ public class EditorModelManager
         {
             return null;
         }
-        var g = ModelManager.CreateNew((ComponentType)mod.transAttribute.type);
+        var g = ModelManagerUI.CreateNew(mod.data.type);
         if (g == null)
         {
             Debug.Log("Name:" + mod.name + " is null");
@@ -130,44 +132,61 @@ public class EditorModelManager
         var t = g.transform;
         if (parent != null)
             t.SetParent(parent);
-        mod.Load(g);
-        if (mod is ImageElement)
+        mod.LoadToObject(t);
+        var typ = mod.data.type;
+        if ((typ & 0x2) > 0)
         {
-            var img = mod as ImageElement;
-            img.SetSprite(FindSprite(img.textureName, img.spriteName));
+            var child = mod.components;
+            for (int j = 0; j < child.Count; j++)
+            {
+                ImageElement e = child[j] as ImageElement;
+                if (e != null)
+                {
+                    mod.Context.GetComponent<Image>().sprite = FindSprite(e.textureName, e.spriteName);
+                    break;
+                }
+            }
         }
-        else if (mod is RawImageElement)
+        else if ((typ & 0x20) > 0)
         {
-            var img = mod as RawImageElement;
-            img.SetTexture(FindTexture(img.textureName));
+            var child = mod.components;
+            for (int j = 0; j < child.Count; j++)
+            {
+                RawImageElement e = child[j] as RawImageElement;
+                if (e != null)
+                {
+                    mod.Context.GetComponent<RawImage>().texture = FindTexture(e.textureName);
+                    break;
+                }
+            }
         }
         mod.Main = g;
         mod.AddSizeScale();
-        var c = mod.Child;
+        var c = mod.child;
         for (int i = 0; i < c.Count; i++)
             LoadToGame(c[i], o, t, filter);
-        if (o != null)
-            GetObject(t, o, mod);
+        //if (o != null)
+        //    GetObject(mod, o, mod);
         return g;
     }
-    static void GetObject(Transform t, object o, ModelElement mod)
+    static void GetObject(ModelElement t, object o, ModelElement mod)
     {
-        var m = o.GetType().GetField(t.name);
-        if (m != null)
-        {
-            if (m.FieldType == typeof(GameObject))
-                m.SetValue(o, t.gameObject);
-            else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
-                m.SetValue(o, EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType));
-            else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
-            {
-                var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
-                obj.Initial(t as RectTransform, mod);
-                m.SetValue(o, obj);
-            }
-            else if (typeof(Component).IsAssignableFrom(m.FieldType))
-                m.SetValue(o, t.GetComponent(m.FieldType));
-        }
+        //var m = o.GetType().GetField(t.name);
+        //if (m != null)
+        //{
+        //    if (m.FieldType == typeof(GameObject))
+        //        m.SetValue(o, t.gameObject);
+        //    else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
+        //        m.SetValue(o, EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType));
+        //    else if (typeof(UIComposite).IsAssignableFrom(m.FieldType))
+        //    {
+        //        var obj = Activator.CreateInstance(m.FieldType) as UIComposite;
+        //        obj.Initial(mod);
+        //        m.SetValue(o, obj);
+        //    }
+        //    else if (typeof(Component).IsAssignableFrom(m.FieldType))
+        //        m.SetValue(o, t.GetComponent(m.FieldType));
+        //}
     }
 }
 

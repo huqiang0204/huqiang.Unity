@@ -43,9 +43,9 @@ namespace huqiang.UI
         Image Context;
         public ImageData data;
         string shader;
-        string assetName;
-        string textureName;
-        string spriteName;
+        public string assetName;
+        public string textureName;
+        public string spriteName;
         public unsafe override void Load(FakeStruct fake)
         {
             data = *(ImageData*)fake.ip;
@@ -93,6 +93,8 @@ namespace huqiang.UI
             data->fillMethod = img.fillMethod;
             data->fillOrigin = img.fillOrigin;
             data->preserveAspect = img.preserveAspect;
+            data->type = img.type;
+            data->color = img.color;
             if (img.sprite != null)
             {
                 var tn = img.sprite.texture.name;

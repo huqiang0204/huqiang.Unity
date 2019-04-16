@@ -10,14 +10,14 @@ namespace huqiang.UIEvent
     public class BaseEvent
     {
         static List<BaseEvent> events=new List<BaseEvent>();
-        static List<UIElement> Roots;
-        public static void InsertRoot(UIElement ui, int index = 0)
+        static List<ModelElement> Roots;
+        public static void InsertRoot(ModelElement ui, int index = 0)
         {
             if (ui == null)
                 return;
             if (Roots == null)
             {
-                Roots = new List<UIElement>();
+                Roots = new List<ModelElement>();
                 Roots.Add(ui);
                 return;
             }
@@ -33,7 +33,7 @@ namespace huqiang.UIEvent
                 index = Roots.Count;
             Roots.Insert(index, ui);
         }
-        public static T RegEvent<T>(UIElement element)where T:BaseEvent,new()
+        public static T RegEvent<T>(ModelElement element)where T:BaseEvent,new()
         {
             for(int i=0;i<events.Count;i++)
             {
@@ -86,7 +86,7 @@ namespace huqiang.UIEvent
                 }
             label:;
         }
-        public static bool DispatchEvent(UIElement ui, Vector3 pos, Vector3 scale, Quaternion quate, UserInput action)
+        public static bool DispatchEvent(ModelElement ui, Vector3 pos, Vector3 scale, Quaternion quate, UserInput action)
         {
             if (ui == null)
             {
@@ -260,7 +260,7 @@ namespace huqiang.UIEvent
                 if (back.ScrollEndY != null)
                     back.ScrollEndY(back);
         }
-        public UIElement Context;
+        public ModelElement Context;
         Vector2 mVelocity;
         public float VelocityX { get { return mVelocity.x; } set { maxVelocity.x = mVelocity.x = value; RefreshRateX(); } }
         public float VelocityY { get { return mVelocity.y; } set { maxVelocity.y = mVelocity.y = value; RefreshRateY(); } }

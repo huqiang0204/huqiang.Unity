@@ -10,7 +10,7 @@ namespace huqiang.UIComposite
 {
     public class DragContent:UIComposite
     {
-        public override void Initial(UIElement element)
+        public override void Initial(ModelElement element)
         {
             view = element;
             element.RegEvent<BaseEvent>();
@@ -77,8 +77,8 @@ namespace huqiang.UIComposite
             }
             return sonPos;
         }
-        public UIElement view;
-        public UIElement Content;
+        public ModelElement view;
+        public ModelElement Content;
         public BaseEvent eventCall;
         public DragContent()
         {

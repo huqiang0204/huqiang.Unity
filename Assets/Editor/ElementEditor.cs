@@ -1,5 +1,5 @@
-﻿
-using huqiang.UIModel;
+﻿using huqiang.Data;
+using huqiang.UI;
 using System.IO;
 using UGUI;
 using UnityEditor;
@@ -61,14 +61,15 @@ public class ElementEditor : Editor
             return;
         LoadBundle();
         Assetname = Assetname.Replace(" ", "");
-        ModelManager.Initial();
+        ModelManagerUI.InitialComponent();
+        ModelManagerUI.InitialModel();
         var dc = dicpath;
         if (dc == null | dc == "")
         {
             dc = Application.dataPath + "/AssetsBundle/";
         }
         dc += Assetname;
-        ModelManager.SavePrefab(gameObject, dc);
+        ModelManagerUI.SavePrefab(gameObject, dc);
         Debug.Log("create done path:"+dc);
     }
     static void Clone(string CloneName, byte[] ui, Transform root)
@@ -79,8 +80,9 @@ public class ElementEditor : Editor
                 if (CloneName != "")
                 {
                     LoadBundle();
-                    ModelManager.Initial();
-                    ModelManager.LoadModels(ui, "assTest");
+                    ModelManagerUI.InitialComponent();
+                    ModelManagerUI.InitialModel();
+                    ModelManagerUI.LoadModels(ui, "assTest");
                     EditorModelManager.LoadToGame(CloneName, null, root, "");
                 }
         }
@@ -90,11 +92,12 @@ public class ElementEditor : Editor
         if (ui != null)
         {
             LoadBundle();
-            ModelManager.Initial();
-            var all = ModelManager.LoadModels(ui, "assTest");
-            var models = all.models;
-            for (int i = 0; i < models.Length; i++)
-                EditorModelManager.LoadToGame(models[i], null, root, "");
+            ModelManagerUI.InitialComponent();
+            ModelManagerUI.InitialModel();
+            var all = ModelManagerUI.LoadModels(ui, "assTest");
+            ModelElement element = new ModelElement();
+            element.Load(all.models.fakeStruct);
+            element.Apply();
         }
     }
 }

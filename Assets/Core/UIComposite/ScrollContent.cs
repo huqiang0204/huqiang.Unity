@@ -17,7 +17,7 @@ namespace huqiang.UIComposite
     {
         public ScrollType scrollType;
         public static readonly Vector2 Center = new Vector2(0.5f, 0.5f);
-        public UIElement ScrollView;
+        public ModelElement ScrollView;
         public Vector2 Size;//scrollView的尺寸
         public Vector2 ActualSize { get; protected set; }//相当于Content的尺寸
         public Vector2 ItemSize;
@@ -108,22 +108,22 @@ namespace huqiang.UIComposite
         }
         public Vector2 ItemOffset = Vector2.zero;
         protected ScrollItem[] Buff;
-        SwapBuffer<ScrollItem, UIElement> swap;
+        SwapBuffer<ScrollItem, ModelElement> swap;
         int buffPoint = 0;
         protected int max_count;
         public ScrollContent()
         {
-            swap = new SwapBuffer<ScrollItem, UIElement>(512);
+            swap = new SwapBuffer<ScrollItem, ModelElement>(512);
         }
         /// <summary>
         /// 当无法使用跨域反射时，使用此委托进行间接反射
         /// </summary>
-        public Action<ScrollItem, UIElement> Reflection;
+        public Action<ScrollItem, ModelElement> Reflection;
         /// <summary>
         /// 当某个ui超出Mask边界，被回收时调用
         /// </summary>
         public Action<ScrollItem> ItemRecycle;
-        public override void Initial(UIElement model)
+        public override void Initial(ModelElement model)
         {
             ScrollView = model;
         }
@@ -148,7 +148,7 @@ namespace huqiang.UIComposite
             object obj = null;
             if (ItemObject != typeof(GameObject))
                 obj = Activator.CreateInstance(ItemObject);
-            UIElement uI = new UIElement();
+            ModelElement uI = new ModelElement();
             uI.Load(model);
             ScrollView.AddChild(uI);
             ScrollItem a = new ScrollItem();

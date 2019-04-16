@@ -41,17 +41,17 @@ namespace huqiang.UI
         public static int Size = sizeof(ElementData);
         public static int ElementSize = Size / 4;
     }
-    public class UIElement:DataConversion
+    public class ModelElement:DataConversion
     {
         public RectTransform Context;
         public int regIndex;
         public ElementData data;
         public string name;
         public string tag;
-        public UIElement parent { get; private set; }
+        public ModelElement parent { get; private set; }
         public List<DataConversion> components = new List<DataConversion>();
-        public List<UIElement> child = new List<UIElement>();
-        public void AddChild(UIElement element)
+        public List<ModelElement> child = new List<ModelElement>();
+        public void AddChild(ModelElement element)
         {
             if (element.parent != null)
                 element.parent.child.Remove(element);
@@ -84,14 +84,14 @@ namespace huqiang.UI
         {
             data = *(ElementData*)fake.ip;
             var buff = fake.buffer;
-            Int32[] coms = buff.GetData(data.coms) as Int32[];
+            Int16[] coms = buff.GetData(data.coms) as Int16[];
             if (coms != null)
             {
                 for (int i = 0; i < coms.Length; i++)
                 {
                     int index = coms[i];
                     i++;
-                    int type = 1 << coms[i];
+                    int type = coms[i];
                     var fs = buff.GetData(index) as FakeStruct;
                     if (fs != null)
                     {
@@ -111,7 +111,7 @@ namespace huqiang.UI
                     var fs = buff.GetData(chi[i]) as FakeStruct;
                     if (fs != null)
                     {
-                        UIElement model = new UIElement();
+                        ModelElement model = new ModelElement();
                         model.Load(fs);
                         child.Add(model);
                         model.parent = this;
@@ -127,9 +127,11 @@ namespace huqiang.UI
                 if (components[i] != null)
                     components[i].LoadToObject(com);
             Context = com as RectTransform;
+            if (parent != null)
+                Context.SetParent(parent.Context);
             LoadToObject(Context,ref data, this);
         }
-        static void LoadToObject(RectTransform com,ref ElementData data,UIElement ui)
+        static void LoadToObject(RectTransform com,ref ElementData data,ModelElement ui)
         {
             var trans = com as RectTransform;
             trans.localRotation = data.localRotation;
@@ -164,6 +166,8 @@ namespace huqiang.UI
             ed->offsetMin = trans.offsetMin;
             ed->pivot = trans.pivot;
             ed->sizeDelta = trans.sizeDelta;
+            ed->name = buffer.AddData(trans.name);
+            ed->tag = buffer.AddData(trans.tag);
             var coms = com.GetComponents<Component>();
             ed->type = ModelManagerUI.GetTypeIndex(coms);
             List<Int16> tmp = new List<short>();
@@ -187,12 +191,16 @@ namespace huqiang.UI
                     {
                         Int16 type = 0;
                         var fs = ModelManagerUI.LoadFromObject(coms[i], buffer, ref type);
-                        tmp.Add((Int16)buffer.AddData(fs));
-                        tmp.Add(type);
+                        if (type > 0)
+                        {
+                            tmp.Add((Int16)buffer.AddData(fs));
+                            tmp.Add(type);
+                        }
                     }
                 }
             }
-            ed->coms = buffer.AddData(tmp.ToArray());
+            if (tmp.Count > 0)
+                ed->coms = buffer.AddData(tmp.ToArray());
             int c = trans.childCount;
             if (c > 0)
             {
@@ -206,7 +214,7 @@ namespace huqiang.UI
             }
             return fake;
         }
-        public UIElement FindChild(string name)
+        public ModelElement FindChild(string name)
         {
             for (int i = 0; i < child.Count; i++)
                 if (child[i].name == name)
@@ -237,7 +245,7 @@ namespace huqiang.UI
         #region 尺寸自适应
         public static Vector2[] Anchors = new[] { new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f),new Vector2(1, 0.5f),
         new Vector2(0.5f, 1),new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1)};
-        public static void Docking(UIElement rect, ScaleType dock, Vector2 pSize, Vector2 ds)
+        public static void Docking(ModelElement rect, ScaleType dock, Vector2 pSize, Vector2 ds)
         {
             switch (dock)
             {
@@ -268,7 +276,7 @@ namespace huqiang.UI
                     break;
             }
         }
-        public static void Anchor(UIElement rect, Vector2 pivot, Vector2 offset)
+        public static void Anchor(ModelElement rect, Vector2 pivot, Vector2 offset)
         {
             Vector2 p;
             Vector2 pp = new Vector2(0.5f, 0.5f);
@@ -286,11 +294,11 @@ namespace huqiang.UI
             float oy = sy + offset.y;
             rect.data.localPosition = new Vector3(ox, oy, 0);
         }
-        public static void AnchorEx(UIElement rect, AnchorType type, Vector2 offset, Vector2 p, Vector2 psize)
+        public static void AnchorEx(ModelElement rect, AnchorType type, Vector2 offset, Vector2 p, Vector2 psize)
         {
             AnchorEx(rect, Anchors[(int)type], offset, p, psize);
         }
-        public static void AnchorEx(UIElement rect, Vector2 pivot, Vector2 offset, Vector2 parentPivot, Vector2 parentSize)
+        public static void AnchorEx(ModelElement rect, Vector2 pivot, Vector2 offset, Vector2 parentPivot, Vector2 parentSize)
         {
             float ox = (parentPivot.x - 1) * parentSize.x;//原点x
             float oy = (parentPivot.y - 1) * parentSize.y;//原点y
@@ -300,7 +308,7 @@ namespace huqiang.UI
             offset.y += ty;//偏移点y
             rect.data.localPosition = new Vector3(offset.x, offset.y, 0);
         }
-        public static void MarginEx(UIElement rect, Margin margin, Vector2 parentPivot, Vector2 parentSize)
+        public static void MarginEx(ModelElement rect, Margin margin, Vector2 parentPivot, Vector2 parentSize)
         {
             float w = parentSize.x - margin.left - margin.right;
             float h = parentSize.y - margin.top - margin.down;
@@ -336,7 +344,7 @@ namespace huqiang.UI
             float hh = psize.y * 0.5f;
             return new Margin(left - hw, hw - right, hh - top, down - hh);
         }
-        static void Resize(UIElement ele)
+        static void Resize(ModelElement ele)
         {
             if (ele.Main == null)
                 return;
@@ -383,7 +391,7 @@ namespace huqiang.UI
                 MarginEx(ele, mar, p, size);
             }
         }
-        public static void ScaleSize(UIElement element)
+        public static void ScaleSize(ModelElement element)
         {
             if (element.data.SizeScale)
                 Resize(element);
@@ -395,7 +403,7 @@ namespace huqiang.UI
         }
         #endregion
 
-        public bool activeSelf;
+        public bool activeSelf = true;
         public BaseEvent baseEvent;
         public void RegEvent<T>()where T:BaseEvent,new()
         {
@@ -412,21 +420,32 @@ namespace huqiang.UI
         }
         public override void Apply()
         {
-            if (Context == null)
+            if(activeSelf)
             {
-                var obj = ModelManagerUI.CreateNew(data.type);
-                LoadToObject(obj.transform);
+                if (Context == null)
+                {
+                    var obj = ModelManagerUI.CreateNew(data.type);
+                    LoadToObject(obj.transform);
+                }
+                else if (IsChanged)
+                {
+                    LoadToObject(Context, ref data, this);
+                }
+                for (int i = 0; i < components.Count; i++)
+                    if (components[i] != null)
+                        if (components[i].IsChanged)
+                            components[i].Apply();
+                for (int i = 0; i < child.Count; i++)
+                    child[i].Apply();
+                Context.gameObject.SetActive(true);
             }
-            else if (IsChanged)
-                LoadToObject(Context, ref data, this);
-            for (int i = 0; i < components.Count; i++)
-                if (components[i] != null)
-                    if (components[i].IsChanged)
-                        components[i].Apply();
-        }
-        public void Recycle()
-        {
-
+            else
+            {
+                if(Context!=null)
+                {
+                    Context.gameObject.SetActive(false);
+                }
+            }
         }
     }
 }

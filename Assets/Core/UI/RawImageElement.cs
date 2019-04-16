@@ -22,8 +22,8 @@ namespace huqiang.UI
         RawImage Context;
         public RawImageData data;
         string shader;
-        string assetName;
-        string textureName;
+        public string assetName;
+        public string textureName;
         public unsafe override void Load(FakeStruct fake)
         {
             data = *(RawImageData*)fake.ip;

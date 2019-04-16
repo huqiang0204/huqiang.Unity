@@ -5,7 +5,7 @@ namespace huqiang.UIComposite
     public class ScrollItem
     {
         public int index = -1;
-        public UIElement target;
+        public ModelElement target;
         public object datacontext;
         public object obj;
     }

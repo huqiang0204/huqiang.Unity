@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace huqiang.UIModel
+namespace huqiang.Data
 {
     public class ElementAsset
     {

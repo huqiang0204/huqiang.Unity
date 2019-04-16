@@ -37,7 +37,7 @@ namespace huqiang
                 uiRoot.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
                 UIRoot = new GameObject("uiRoot", typeof(RectTransform)).transform as RectTransform;
             }
-            Page.Root = new UIElement();
+            Page.Root = new UI.ModelElement();
             Page.Root.Context = new GameObject("uiRoot",typeof(RectTransform)).transform as RectTransform;
             Page.Root.Context.SetParent(uiRoot);
             ModelManagerUI.Initial();

@@ -60,11 +60,11 @@ namespace huqiang.UI
             {
                 if (types[i].Compare(com))
                 {
-                    Int64 a = 0 << i;
+                    Int64 a = 1 << i;
                     return a;
                 }
             }
-            return -1;
+            return 0;
         }
         public static Int64 GetTypeIndex(Component[] com)
         {
@@ -81,7 +81,7 @@ namespace huqiang.UI
         }
         static int GetTypeIndex(Type type)
         {
-            for (int i = 1; i < point; i++)
+            for (int i = 0; i < point; i++)
             {
                 if (type == types[i].type)
                 {
@@ -89,7 +89,7 @@ namespace huqiang.UI
                     return a;
                 }
             }
-            return -1;
+            return 0;
         }
         /// <summary>
         /// 根据所有类型生成一个id
@@ -99,7 +99,7 @@ namespace huqiang.UI
         public static int GetTypeIndex(Type[] typ)
         {
             if (typ == null)
-                return -1;
+                return 0;
             int a = 0;
             for (int i = 0; i < typ.Length; i++)
                 a |= GetTypeIndex(typ[i]);
@@ -108,13 +108,14 @@ namespace huqiang.UI
 
         public static void InitialComponent()
         {
-            RegComponent(typeof(RectTransform), (o) => { return o is RectTransform; }, () => { return new UIElement(); }, UIElement.LoadFromObject);
+            RegComponent(typeof(RectTransform), (o) => { return o is RectTransform; }, () => { return new ModelElement(); }, ModelElement.LoadFromObject);
             RegComponent(typeof(Image), (o) => { return o is Image; }, () => { return new ImageElement(); }, ImageElement.LoadFromObject);
             RegComponent(typeof(EmojiText), (o) => { return o is EmojiText; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
             RegComponent(typeof(Text), (o) => { return o is Text; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
             RegComponent(typeof(CustomRawImage), (o) => { return o is CustomRawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
             RegComponent(typeof(RawImage), (o) => { return o is RawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
             RegComponent(typeof(Mask), (o) => { return o is Mask; }, () => { return new MaskElement(); }, MaskElement.LoadFromObject);
+            RegComponent(typeof(Outline), (o) => { return o is Outline; }, () => { return new OutLineElement(); }, OutLineElement.LoadFromObject);
         }
         public static void InitialModel()
         {
@@ -125,6 +126,7 @@ namespace huqiang.UI
             RegModel(null, 32, typeof(RectTransform), typeof(CustomRawImage));
             RegModel(null, 32, typeof(RectTransform), typeof(Image), typeof(Mask));
             RegModel(null, 32, typeof(RectTransform), typeof(EmojiText));
+            RegModel(null, 32, typeof(RectTransform), typeof(Text), typeof(Outline));
         }
         static List<ModelBuffer> models = new List<ModelBuffer>();
         /// <summary>
@@ -172,23 +174,23 @@ namespace huqiang.UI
         public static void SavePrefab(GameObject uiRoot, string path)
         {
             DataBuffer db = new DataBuffer(1024);
-            db.fakeStruct = UIElement.LoadFromObject(uiRoot.transform, db);
+            db.fakeStruct = ModelElement.LoadFromObject(uiRoot.transform, db);
             File.WriteAllBytes(path, db.ToBytes());
         }
-        static List<PrefabAsset> prefabAssets = new List<PrefabAsset>();
+        static List<PrefabAsset> prefabs = new List<PrefabAsset>();
         public unsafe static PrefabAsset LoadModels(byte[] buff, string name)
         {
             DataBuffer db = new DataBuffer(buff);
             var asset = new PrefabAsset();
             asset.models = db;
             asset.name = name;
-            for (int i = 0; i < prefabAssets.Count; i++)
-                if (prefabAssets[i].name == name)
+            for (int i = 0; i < prefabs.Count; i++)
+                if (prefabs[i].name == name)
                 {
-                    prefabAssets.RemoveAt(i);
+                    prefabs.RemoveAt(i);
                     break;
                 }
-            prefabAssets.Add(asset);
+            prefabs.Add(asset);
             return asset;
         }
         /// <summary>
@@ -200,21 +202,38 @@ namespace huqiang.UI
         /// <param name="parent"></param>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public static UIElement LoadToElement(string asset, string mod)
+        public static ModelElement LoadToElement(string asset, string mod)
         {
-            for (int i = 0; i < prefabAssets.Count; i++)
+            for (int i = 0; i < prefabs.Count; i++)
             {
-                if (asset == prefabAssets[i].name)
+                if (asset == prefabs[i].name)
                 {
-                    var ms = prefabAssets[i].models.fakeStruct;
-                    var fs = UIElement.FindChild(ms, mod);
+                    var ms = prefabs[i].models.fakeStruct;
+                    var fs = ModelElement.FindChild(ms, mod);
                     if (fs != null)
                     {
-                        UIElement element = new UIElement();
+                        ModelElement element = new ModelElement();
                         element.Load(fs);
                         return element;
                     }
                     return null;
+                }
+            }
+            return null;
+        }
+        public static ModelElement FindModel(string mod)
+        {
+            if (prefabs == null)
+                return null;
+            if (prefabs.Count > 0)
+            {
+                var ms = prefabs[0].models.fakeStruct;
+                var fs = ModelElement.FindChild(ms, mod);
+                if (fs != null)
+                {
+                    ModelElement element = new ModelElement();
+                    element.Load(fs);
+                    return element;
                 }
             }
             return null;
@@ -233,12 +252,12 @@ namespace huqiang.UI
         /// 挂载被回收得对象
         /// </summary>
         public static Transform CycleBuffer;
-        static List<UIElement> buffer=new List<UIElement>();
+        static List<ModelElement> buffer=new List<ModelElement>();
         /// <summary>
         /// 回收一个对象，包括子对象
         /// </summary>
         /// <param name="game"></param>
-        public static void RecycleElement(UIElement u)
+        public static void RecycleElement(ModelElement u)
         {
             if (u.Context != null)
                 buffer.Add(u);
@@ -253,7 +272,7 @@ namespace huqiang.UI
             }
             buffer.Clear();
         }
-        static void Recycle(UIElement u)
+        static void Recycle(ModelElement u)
         {
            if(u.Context!=null)
             {

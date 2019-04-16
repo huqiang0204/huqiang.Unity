@@ -47,7 +47,6 @@ namespace huqiang.UI
         string shader;
         string fontName;
         string text;
-        string spriteName;
         public unsafe override void Load(FakeStruct fake)
         {
             data = *(TextData*)fake.ip;
@@ -81,6 +80,7 @@ namespace huqiang.UI
             if (image.shader != "Default UI Material")
                 a.material = new Material(Shader.Find(image.shader));
             a.font = FindFont(image.fontName);
+            a.text = image.text;
             image.Context = a;
         }
         public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)

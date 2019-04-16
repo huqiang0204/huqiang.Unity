@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96f69e9818b786849ae060347bba9a2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bytesUI: {fileID: 0}
+  bytesUI: {fileID: 4900000, guid: 8ac8f7b790305b14baee8a8b8cc0a66e, type: 3}
   dicpath: 
   Assetname: baseUI.bytes
   CloneName: 

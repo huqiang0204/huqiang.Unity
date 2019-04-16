@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class LoadingPage : Page
 {
-    UIElement txt;
-    public override void Initial(UIElement parent, object dat = null)
+    ModelElement txt;
+    public override void Initial(ModelElement parent, object dat = null)
     {
         model = ModelManagerUI.LoadToElement("baseUI", "loading");
         base.Initial(parent, dat);
