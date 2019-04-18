@@ -17,11 +17,10 @@ namespace huqiang.UI
         public static int Size = sizeof(RawImageData);
         public static int ElementSize = Size / 4;
     }
-    public class RawImageElement:DataConversion
+    public class RawImageE: GraphicE
     {
         RawImage Context;
         public RawImageData data;
-        string shader;
         public string assetName;
         public string textureName;
         public unsafe override void Load(FakeStruct fake)
@@ -35,7 +34,7 @@ namespace huqiang.UI
         {
             LoadToObject(game, ref data, this);
         }
-        public static void LoadToObject(Component game, ref RawImageData dat, RawImageElement image)
+        public static void LoadToObject(Component game, ref RawImageData dat, RawImageE image)
         {
             var a = game.GetComponent<RawImage>();
             if (a == null)

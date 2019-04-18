@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UI
 {
-    public class MaskElement:DataConversion
+    public class MaskE:DataConversion
     {
         Mask Context;
         bool data;

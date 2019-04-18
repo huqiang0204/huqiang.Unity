@@ -38,14 +38,19 @@ namespace huqiang.UI
             }
         }
     }
-    public class ImageElement : DataConversion
+    public class ImageE : GraphicE
     {
         Image Context;
         public ImageData data;
-        string shader;
         public string assetName;
         public string textureName;
-        public string spriteName;
+        string mSprite;
+        bool msChanged;
+        public string spriteName {
+            get { return mSprite; }
+            set { mSprite = value;
+                msChanged = true; }
+        }
         public unsafe override void Load(FakeStruct fake)
         {
             data = *(ImageData*)fake.ip;
@@ -58,11 +63,15 @@ namespace huqiang.UI
         {
             LoadToObject(game, ref data,this);
         }
-        public static void LoadToObject(Component game, ref ImageData dat,ImageElement image)
+        public static void LoadToObject(Component game, ref ImageData dat,ImageE image)
         {
             var a = game.GetComponent<Image>();
             if (a== null)
                 return;
+            LoadToObject(a,ref dat,image);
+        }
+        public static void LoadToObject(Image a, ref ImageData dat, ImageE image)
+        {
             a.alphaHitTestMinimumThreshold = dat.alphaHit;
             a.fillAmount = dat.fillAmount;
             a.fillCenter = dat.fillCenter;
@@ -73,10 +82,13 @@ namespace huqiang.UI
             a.type = dat.type;
             a.raycastTarget = false;
             a.color = dat.color;
-            if (image.shader != "Default UI Material")
-                a.material = new Material(Shader.Find(image.shader));
-            if (image.spriteName != null)
-                a.sprite = ElementAsset.FindSprite(image.assetName, image.textureName, image.spriteName);
+            a.material = image.material;
+            if (image.msChanged)
+            {
+                if (image.mSprite == null)
+                    a.sprite = null;
+                else  a.sprite = ElementAsset.FindSprite(image.assetName, image.textureName, image.spriteName);
+            }
             image.Context = a;
         }
         public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
@@ -107,6 +119,11 @@ namespace huqiang.UI
             if (img.material != null)
                 data->shader= buffer.AddData(img.material.shader.name);
             return fake;
+        }
+        public override void Apply()
+        {
+            Update();
+            LoadToObject(Context,ref data,this);
         }
     }
 }

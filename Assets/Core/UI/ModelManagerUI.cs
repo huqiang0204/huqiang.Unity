@@ -109,12 +109,12 @@ namespace huqiang.UI
         public static void InitialComponent()
         {
             RegComponent(typeof(RectTransform), (o) => { return o is RectTransform; }, () => { return new ModelElement(); }, ModelElement.LoadFromObject);
-            RegComponent(typeof(Image), (o) => { return o is Image; }, () => { return new ImageElement(); }, ImageElement.LoadFromObject);
-            RegComponent(typeof(EmojiText), (o) => { return o is EmojiText; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
-            RegComponent(typeof(Text), (o) => { return o is Text; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
-            RegComponent(typeof(CustomRawImage), (o) => { return o is CustomRawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
-            RegComponent(typeof(RawImage), (o) => { return o is RawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
-            RegComponent(typeof(Mask), (o) => { return o is Mask; }, () => { return new MaskElement(); }, MaskElement.LoadFromObject);
+            RegComponent(typeof(Image), (o) => { return o is Image; }, () => { return new ImageE(); }, ImageE.LoadFromObject);
+            RegComponent(typeof(EmojiText), (o) => { return o is EmojiText; }, () => { return new TextE(); }, TextE.LoadFromObject);
+            RegComponent(typeof(Text), (o) => { return o is Text; }, () => { return new TextE(); }, TextE.LoadFromObject);
+            RegComponent(typeof(CustomRawImage), (o) => { return o is CustomRawImage; }, () => { return new RawImageE(); }, RawImageE.LoadFromObject);
+            RegComponent(typeof(RawImage), (o) => { return o is RawImage; }, () => { return new RawImageE(); }, RawImageE.LoadFromObject);
+            RegComponent(typeof(Mask), (o) => { return o is Mask; }, () => { return new MaskE(); }, MaskE.LoadFromObject);
             RegComponent(typeof(Outline), (o) => { return o is Outline; }, () => { return new OutLineElement(); }, OutLineElement.LoadFromObject);
         }
         public static void InitialModel()

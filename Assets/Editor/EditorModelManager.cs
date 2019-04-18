@@ -139,7 +139,7 @@ public class EditorModelManager
             var child = mod.components;
             for (int j = 0; j < child.Count; j++)
             {
-                ImageElement e = child[j] as ImageElement;
+                ImageE e = child[j] as ImageE;
                 if (e != null)
                 {
                     mod.Context.GetComponent<Image>().sprite = FindSprite(e.textureName, e.spriteName);
@@ -152,7 +152,7 @@ public class EditorModelManager
             var child = mod.components;
             for (int j = 0; j < child.Count; j++)
             {
-                RawImageElement e = child[j] as RawImageElement;
+                RawImageE e = child[j] as RawImageE;
                 if (e != null)
                 {
                     mod.Context.GetComponent<RawImage>().texture = FindTexture(e.textureName);

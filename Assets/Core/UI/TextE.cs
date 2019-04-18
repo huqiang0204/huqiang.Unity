@@ -26,7 +26,7 @@ namespace huqiang.UI
         public static int Size = sizeof(TextData);
         public static int ElementSize = Size / 4;
     }
-    public class TextElement:DataConversion
+    public class TextE:GraphicE
     {
         public static List<Font> fonts = new List<Font>();
         public static Font FindFont(string str)
@@ -39,14 +39,18 @@ namespace huqiang.UI
                     return fonts[i];
             }
             if (fonts.Count == 0)
-                TextElement.fonts.Add(Font.CreateDynamicFontFromOSFont("Arial", 16));
+                TextE.fonts.Add(Font.CreateDynamicFontFromOSFont("Arial", 16));
             return fonts[0];
         }
         Text Context;
         public TextData data;
-        string shader;
         string fontName;
-        string text;
+        string mtext;
+        public string text { set {
+                if (mtext != null)
+                    IsChanged = true;
+                 mtext = value; }
+            get { return mtext; } }
         public unsafe override void Load(FakeStruct fake)
         {
             data = *(TextData*)fake.ip;
@@ -58,11 +62,15 @@ namespace huqiang.UI
         {
             LoadToObject(game, ref data, this);
         }
-        public static void LoadToObject(Component game, ref TextData dat, TextElement image)
+        public static void LoadToObject(Component game, ref TextData dat, TextE image)
         {
             var a = game.GetComponent<Text>();
             if (a == null)
                 return;
+            LoadToObject(a,ref dat,image);
+        }
+        public static void LoadToObject(Text a, ref TextData dat, TextE image)
+        {
             a.alignByGeometry = dat.alignByGeometry;
             a.alignment = dat.alignment;
             a.fontSize = dat.fontSize;
@@ -77,8 +85,7 @@ namespace huqiang.UI
             a.color = dat.color;
             a.raycastTarget = false;
             a.color = dat.color;
-            if (image.shader != "Default UI Material")
-                a.material = new Material(Shader.Find(image.shader));
+            a.material = image.material;
             a.font = FindFont(image.fontName);
             a.text = image.text;
             image.Context = a;
@@ -108,6 +115,11 @@ namespace huqiang.UI
             if (txt.material != null)
                 data->shader = buffer.AddData(txt.material.shader.name);
             return fake;
+        }
+        public override void Apply()
+        {
+            Update();
+            LoadToObject(Context, ref data, this);
         }
     }
 }
