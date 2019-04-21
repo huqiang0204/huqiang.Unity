@@ -1,4 +1,5 @@
-﻿using System;
+﻿using huqiang.Data;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -20,7 +21,7 @@ namespace huqiang
         public IPEndPoint endpPoint;
         public KcpEnvelope envelope = new KcpEnvelope();
         public long time;
-        public Queue<byte[]> metaData = new Queue<byte[]>();
+        public QueueBuffer<byte[]> metaData = new QueueBuffer<byte[]>();
         /// <summary>
         /// 5秒
         /// </summary>
@@ -32,9 +33,8 @@ namespace huqiang
         {
             int c = metaData.Count;
             byte[][] tmp = new byte[c][];
-            lock (metaData)
-                for (int i = 0; i < c; i++)
-                    tmp[i] = metaData.Dequeue();
+            for (int i = 0; i < c; i++)
+                tmp[i] = metaData.Dequeue();
             if (c == 0)
             {
                 if (time - lastTime > TimeOut)

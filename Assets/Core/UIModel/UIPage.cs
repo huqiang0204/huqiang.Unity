@@ -1,10 +1,9 @@
 ﻿using huqiang;
 using System;
 using System.Collections.Generic;
+using huqiang.UIModel;
 using UnityEngine;
 using huqiang.Data;
-using huqiang.UI;
-using huqiang.UIEvent;
 
 public class UIBase
 {
@@ -39,21 +38,28 @@ public class UIBase
         point++;
     }
     public object DataContext;
-    public ModelElement Parent { get; protected set; }
+    public Transform Parent { get; protected set; }
+    public GameObject main { get; protected set; }
     public ModelElement model { get; protected set; }
     protected UIBase UIParent;
-    public virtual void Initial(huqiang.UI.ModelElement parent, UIBase ui, object obj = null)
+    public virtual void Initial(Transform parent, UIBase ui, object obj = null)
     {
         DataContext = obj;
         UIParent = ui;
         Parent = parent;
-        if (parent != null)
-            if (model != null)
-                parent.AddChild(model);
+        if (model != null)
+            main = model.Main;
+        if (main != null)
+        {
+            var t = main.transform;
+            t.SetParent(parent);
+            t.localPosition = Vector3.zero;
+            t.localScale = Vector3.one;
+        }
     }
     public virtual void Dispose() {
-        if (model != null)
-            ModelManagerUI.RecycleElement(model);
+        if (main != null)
+            ModelManagerUI.RecycleGameObject(main);
         point--;
         if (buff[point] != null)
             buff[point].Index = Index;
@@ -77,10 +83,14 @@ public class UIBase
     public virtual void Cmd(DataBuffer dat)
     {
     }
+    public virtual void FullCmd(reqs reqs, object dat)
+    {
+        Cmd(reqs.cmd,dat);
+    }
     public virtual void ReSize()
     {
         if (model != null)
-            huqiang.UI.ModelElement.ScaleSize((huqiang.UI.ModelElement)model);
+            ModelElement.ScaleSize(model);
     }
     public virtual void Update(float time)
     {
@@ -94,14 +104,14 @@ public class PopWindow:UIBase
 {
     public Func<bool> Back { get; set; }
     protected Page MainPage;
-    public virtual void Initial(huqiang.UI.ModelElement parent, Page page, object obj = null) {
+    public virtual void Initial(Transform parent, Page page, object obj = null) {
         base.Initial(parent,page,obj);
         MainPage = page;
        }
-    public virtual void Show(object obj = null) { if (model != null) model.activeSelf=true; }
+    public virtual void Show(object obj = null) { if (main != null) main.SetActive(true); }
     public virtual void Hide() {
-        if (model != null)
-            model.activeSelf = false;
+        if (main != null)
+            main.SetActive(false);
     }
     public virtual bool Handling(string cmd,object dat)
     {
@@ -124,7 +134,7 @@ public class Page:UIBase
     {
         pages.Clear();
     }
-    public static ModelElement Root { get;  set; }
+    public static RectTransform Root { get;  set; }
     public static Page CurrentPage { get; private set; }
     public static void LoadPage<T>(object dat = null) where T : Page, new()
     {
@@ -133,8 +143,9 @@ public class Page:UIBase
             CurrentPage.Show(dat);
             return;
         }
-        BaseEvent.ClearEvent();
+        EventCallBack.ClearEvent();
         AnimationManage.Manage.ReleaseAll();
+        LeanTween.cancelAll();
         if (CurrentPage != null)
         {
             CurrentPage.Save();
@@ -155,8 +166,9 @@ public class Page:UIBase
                     CurrentPage.Show(dat);
                     return;
                 }
-            BaseEvent.ClearEvent();
+            EventCallBack.ClearEvent();
             AnimationManage.Manage.ReleaseAll();
+            LeanTween.cancelAll();
             if (CurrentPage != null)
                 CurrentPage.Dispose();
             var t = Activator.CreateInstance(type) as Page;
@@ -186,6 +198,11 @@ public class Page:UIBase
         if (CurrentPage != null)
             CurrentPage.Cmd(cmd, obj);
     }
+    public static void UpdateData(reqs r,object obj)
+    {
+        if (CurrentPage != null)
+            CurrentPage.FullCmd(r,obj);
+    }
     public static void Refresh(float time)
     {
         if (CurrentPage != null)
@@ -201,14 +218,18 @@ public class Page:UIBase
     protected object BackData;
     protected GameObject mask;
     public PopWindow currentPop { get; private set; }
-    public virtual void Initial(huqiang.UI.ModelElement parent, object dat = null) {
+    public virtual void Initial(Transform parent, object dat = null) {
         Parent = parent;
         DataContext = dat;
-        if (parent != null)
-            if (model != null)
-                parent.AddChild(model);
+        if(main!=null)
+        {
+            var t = main.transform;
+            t.SetParent(parent);
+            t.localPosition = Vector3.zero;
+            t.localScale = Vector3.one;
+        }
     }
-    public virtual void Initial(huqiang.UI.ModelElement parent, object dat = null, Type back = null, Type pop = null, object backData = null)
+    public virtual void Initial(Transform parent, object dat = null, Type back = null, Type pop = null, object backData = null)
     {
         Initial(parent,dat);
         BackPage = back;
@@ -218,7 +239,7 @@ public class Page:UIBase
     public virtual void Show(object dat=null)
     {
     }
-    public override void ReSize() { base.ReSize(); if (currentPop != null) currentPop.ReSize(); }
+    public override void ReSize() { base.ReSize();if (currentPop != null) currentPop.ReSize(); }
     public override void Dispose()
     {
         if (pops != null)
@@ -226,7 +247,8 @@ public class Page:UIBase
         pops[i].Dispose(); 
         pops.Clear();
         currentPop = null;
-        ModelManagerUI.RecycleElement(model);
+        ModelManagerUI.RecycleGameObject(main);
+        main = null;
         ClearUI();
     }
     public void HidePopWindow()
@@ -240,7 +262,7 @@ public class Page:UIBase
         currentPop = null;
     }
     List<PopWindow> pops;
-    protected T ShowPopWindow<T>(object obj = null, huqiang.UI.ModelElement parent = null) where T : PopWindow, new()
+    protected T ShowPopWindow<T>(object obj = null, Transform parent = null) where T : PopWindow, new()
     {
         if (mask != null)
             mask.gameObject.SetActive(true);
@@ -262,7 +284,7 @@ public class Page:UIBase
         t.ReSize();
         return t;
     }
-    protected object ShowPopWindow(Type type, object obj = null, huqiang.UI.ModelElement parent = null)
+    protected object ShowPopWindow(Type type, object obj = null, Transform parent = null)
     {
         if (mask != null)
             mask.gameObject.SetActive(true);
@@ -352,7 +374,7 @@ public class Page:UIBase
         PageInfo page = new PageInfo();
         page.Pagetype = GetType();
         if (currentPop != null)
-            if (currentPop.model.activeSelf)
+            if (currentPop.main.activeSelf)
             {
                 page.PopType = currentPop.GetType();
                 page.PopData = currentPop.DataContext;

@@ -1,4 +1,5 @@
 ﻿using huqiang.Data;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace huqiang.UI
+namespace huqiang.UIModel
 {
     public unsafe struct OutLineData
     {

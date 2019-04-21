@@ -1,12 +1,13 @@
-﻿using System;
+﻿using huqiang.Data;
+using huqiang.Manager2D;
+using System;
 using System.Collections.Generic;
-using UGUI;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace huqiang.UIModel
 {
-    public unsafe struct TextAttribute
+    public unsafe struct TextData
     {
         public bool alignByGeometry;
         public TextAnchor alignment;
@@ -22,28 +23,13 @@ namespace huqiang.UIModel
         public VerticalWrapMode verticalOverflow;
         public Int32 font;
         public Int32 text;
-        public Int32 material;
         public Int32 shader;
-        public static int Size = sizeof(TextAttribute);
+        public static int Size = sizeof(TextData);
         public static int ElementSize = Size / 4;
-        public static void LoadFromBuff(ref TextAttribute txt, void* p)
-        {
-            fixed (Boolean* trans = &txt.alignByGeometry)
-            {
-                Int32* a =(Int32*) trans;
-                Int32* b = (Int32*)p;
-                for (int i = 0; i < ElementSize; i++)
-                {
-                    *a = *b;
-                    a++;
-                    b++;
-                }
-            }
-        }
     }
-    public class TextElement : ModelElement
+    public class TextElement : DataConversion
     {
-        public static List<Font> fonts=new List<Font>();
+        public static List<Font> fonts = new List<Font>();
         public static Font FindFont(string str)
         {
             if (fonts == null)
@@ -57,105 +43,74 @@ namespace huqiang.UIModel
                 TextElement.fonts.Add(Font.CreateDynamicFontFromOSFont("Arial", 16));
             return fonts[0];
         }
-        public TextAttribute textAttribute;
-        public Font font;
-        public Material material;
-        string text;
-        string fontName;
-        string smat;
+        Text Context;
+        public TextData data;
         string shader;
-        public unsafe override byte* LoadFromBuff(byte* point)
+        string fontName;
+        string text;
+        string spriteName;
+        public unsafe override void Load(FakeStruct fake)
         {
-            point = base.LoadFromBuff(point);
-            name = buffer[transAttribute.name] ;
-            tag = buffer[transAttribute.tag];
-            TextAttribute.LoadFromBuff(ref textAttribute,point);
-            smat = buffer[textAttribute.material];
-            shader = buffer[textAttribute.shader];
-            fontName = buffer[textAttribute.font];
-            text = buffer[textAttribute.text];
-            return point + TextAttribute.Size;
+            data = *(TextData*)fake.ip;
+            shader = fake.buffer.GetData(data.shader) as string;
+            text = fake.buffer.GetData(data.text) as string;
+            fontName = fake.buffer.GetData(data.font) as string;
         }
-        public unsafe override byte[] ToBytes()
+        public override void LoadToObject(Component game)
         {
-            int size = ElementAttribute.Size;
-            int tsize = TextAttribute.Size;
-            byte[] buff = new byte[size + tsize];
-            fixed (byte* bp = &buff[0])
-            {
-                *(ElementAttribute*)bp = transAttribute;
-                byte* a = bp+ size;
-                *(TextAttribute*)a = textAttribute;
-            }
-            return buff;
+            LoadToObject(game, ref data, this);
         }
-        static void Load(GameObject tar, ref TextAttribute att)
+        public static void LoadToObject(Component game, ref TextData dat, TextElement image)
         {
-            var a = tar.GetComponent<Text>();
-            a.alignByGeometry = att.alignByGeometry;
-            a.alignment = att.alignment;
-            a.fontSize = att.fontSize;
-            a.fontStyle = att.fontStyle;
-            a.horizontalOverflow = att.horizontalOverflow;
-            a.lineSpacing = att.lineSpacing;
-            a.resizeTextForBestFit = att.resizeTextForBestFit;
-            a.resizeTextMaxSize = att.resizeTextMaxSize;
-            a.resizeTextMinSize = att.resizeTextMinSize;
-            a.supportRichText = att.supportRichText;
-            a.verticalOverflow = att.verticalOverflow;
-            a.color = att.color;
+            var a = game.GetComponent<Text>();
+            if (a == null)
+                return;
+            a.alignByGeometry = dat.alignByGeometry;
+            a.alignment = dat.alignment;
+            a.fontSize = dat.fontSize;
+            a.fontStyle = dat.fontStyle;
+            a.horizontalOverflow = dat.horizontalOverflow;
+            a.lineSpacing = dat.lineSpacing;
+            a.resizeTextForBestFit = dat.resizeTextForBestFit;
+            a.resizeTextMaxSize = dat.resizeTextMaxSize;
+            a.resizeTextMinSize = dat.resizeTextMinSize;
+            a.supportRichText = dat.supportRichText;
+            a.verticalOverflow = dat.verticalOverflow;
+            a.color = dat.color;
             a.raycastTarget = false;
-            a.enabled = true;
+            a.color = dat.color;
+            if (image.shader != "Default UI Material")
+                a.material = new Material(Shader.Find(image.shader));
+            a.font = FindFont(image.fontName);
+            a.text = image.text;
+            image.Context = a;
+            
         }
-        static void Save(GameObject tar, TextElement text)
+        public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
         {
-            var txt = tar.GetComponent<Text>();
-            if (txt != null)
-            {
-                text.textAttribute.alignByGeometry = txt.alignByGeometry;
-                text.textAttribute.alignment = txt.alignment;
-                text.textAttribute.fontSize = txt.fontSize;
-                text.textAttribute.fontStyle = txt.fontStyle;
-                text.textAttribute.horizontalOverflow = txt.horizontalOverflow;
-                text.textAttribute.lineSpacing = txt.lineSpacing;
-                text.textAttribute.resizeTextForBestFit = txt.resizeTextForBestFit;
-                text.textAttribute.resizeTextMaxSize = txt.resizeTextMaxSize;
-                text.textAttribute.resizeTextMinSize = txt.resizeTextMinSize;
-                text.textAttribute.supportRichText = txt.supportRichText;
-                text.textAttribute.verticalOverflow = txt.verticalOverflow;
-                text.textAttribute.color = txt.color;
-                text.textAttribute.text = text.buffer.AddString(txt.text);
-                var mat = txt.material;
-                text.textAttribute.material = text.buffer.AddString(mat.name);
-                text.textAttribute.shader = text.buffer.AddString(mat.shader.name);
-                if (txt.font != null)
-                    text.textAttribute.font = text.buffer.AddString(txt.font.name);
-            }
-        }
-        public override void Load(GameObject tar)
-        {
-            base.Load(tar);
-            Load(tar, ref this.textAttribute);
-            var txt = tar.GetComponent<Text>();
-            if (smat != null)
-                if (smat != "Default UI Material")
-                    txt.material = new Material(Shader.Find(shader));
-            txt.font = FindFont(fontName);
-            txt.text = text;
-        }
-        public override void Save(GameObject tar)
-        {
-            base.Save(tar);
-            Save(tar, this);
-        }
-    }
-    public class EmojiTextElement : TextElement
-    {
-        public override void Load(GameObject tar)
-        {
-            base.Load(tar);
-            var mat = tar.GetComponent<Graphic>().material;
-            mat.SetTexture("_emoji",EmojiText.Emoji);
+            var txt = com as Text;
+            if (txt == null)
+                return null;
+            FakeStruct fake = new FakeStruct(buffer, TextData.ElementSize);
+            TextData* data = (TextData*)fake.ip;
+            data->alignByGeometry = txt.alignByGeometry;
+            data->alignment = txt.alignment;
+            data->fontSize = txt.fontSize;
+            data->fontStyle = txt.fontStyle;
+            data->horizontalOverflow = txt.horizontalOverflow;
+            data->lineSpacing = txt.lineSpacing;
+            data->resizeTextForBestFit = txt.resizeTextForBestFit;
+            data->resizeTextMaxSize = txt.resizeTextMaxSize;
+            data->resizeTextMinSize = txt.resizeTextMinSize;
+            data->supportRichText = txt.supportRichText;
+            data->verticalOverflow = txt.verticalOverflow;
+            data->color = txt.color;
+            data->text = buffer.AddData(txt.text);
+            if (txt.font != null)
+                data->font = buffer.AddData(txt.font.name);
+            if (txt.material != null)
+                data->shader = buffer.AddData(txt.material.shader.name);
+            return fake;
         }
     }
 }

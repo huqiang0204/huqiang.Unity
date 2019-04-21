@@ -1,4 +1,5 @@
 ﻿using huqiang.Data;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,12 +11,13 @@ using UnityEngine;
 
 namespace huqiang.UIModel
 {
-    public unsafe struct ElementAttribute
+    public unsafe struct ElementData
     {
+        public Int64 type;
         public Int32 childCount;
         public Int32 name;
         public Int32 tag;
-        public Vector3 localEulerAngles;
+        public Quaternion localRotation;
         public Vector3 localPosition;
         public Vector3 localScale;
         public Vector2 anchoredPosition;
@@ -33,134 +35,190 @@ namespace huqiang.UIModel
         public ParentType parentType;
         public Margin margin;
         public Vector2 DesignSize;
-        public Int32 type;
-        public static int Size = sizeof(ElementAttribute);
+        /// <summary>
+        /// int32数组,高16位为索引,低16位为类型
+        /// </summary>
+        public Int32 coms;
+        /// <summary>
+        /// int16数组
+        /// </summary>
+        public Int32 child;
+        public static int Size = sizeof(ElementData);
         public static int ElementSize = Size / 4;
-        public static void LoadFromBuff(ref ElementAttribute ele, void* p)
-        {
-            fixed (Int32* trans = &ele.childCount)
-            {
-                Int32* a = trans;
-                Int32* b = (Int32*)p;
-                for (int i = 0; i <ElementSize; i++)
-                {
-                    *a = *b;
-                    a++;
-                    b++;
-                }
-            }
-        }
     }
-    public class ModelElement
+    public class ModelElement:DataConversion
     {
+        public RectTransform Context;
         public string name;
         public string tag;
+        public ModelElement parent { get; private set; }
         public StringBuffer buffer;
-        public ElementAttribute transAttribute;
-
-        public unsafe virtual byte* LoadFromBuff(byte* point)
+        public ElementData data;
+        public List<DataConversion> components = new List<DataConversion>();
+        public List<ModelElement> child = new List<ModelElement>();
+        public FakeStruct Model;
+        unsafe public override void Load(FakeStruct fake)
         {
-            transAttribute = *(ElementAttribute*)point;
-            ElementAttribute.LoadFromBuff(ref transAttribute,point);
-            name = buffer[transAttribute.name];
-            tag = buffer[transAttribute.tag];
-            return point + ElementAttribute.Size;
-        }
-        public unsafe virtual byte[] ToBytes()
-        {
-            int size = ElementAttribute.Size;
-            byte[] buff = new byte[size];
-            fixed (byte* bp = &buff[0])
-                *(ElementAttribute*)bp = transAttribute;
-            return buff;
-        }
-
-        public static void Load(GameObject tar, ModelElement  model)
-        {
-            var r = tar.transform;
-            if (r is RectTransform)
+            data = *(ElementData*)fake.ip;
+            var buff = fake.buffer;
+            Int16[] coms = buff.GetData(data.coms) as Int16[];
+            if (coms != null)
             {
-                var t = r as RectTransform;
-                t.pivot = model.transAttribute.pivot;
-                t.anchorMax = model.transAttribute.anchorMax;
-                t.anchorMin = model.transAttribute.anchorMin;
-                t.offsetMax = model.transAttribute.offsetMax;
-                t.offsetMin = model.transAttribute.offsetMin;
-                t.anchoredPosition = model.transAttribute.anchoredPosition;
-                t.anchoredPosition3D = model.transAttribute.anchoredPosition3D;
-                t.localEulerAngles = model.transAttribute.localEulerAngles;
-                t.localScale = model.transAttribute.localScale;
-                t.localPosition = model.transAttribute.localPosition;
-                t.sizeDelta = model.transAttribute.sizeDelta;
-            }
-            tar.name = model.name;
-            tar.tag = model.tag;
-        }
-        public static void Save(GameObject tar, ModelElement model)
-        {
-            var r = tar.transform;
-            if (r is RectTransform)
-            {
-                var s = r as RectTransform;
-                model.transAttribute.localEulerAngles = s.localEulerAngles;
-                model.transAttribute.localPosition = s.localPosition;
-                model.transAttribute.localScale = s.localScale;
-                model.transAttribute.anchoredPosition = s.anchoredPosition;
-                model.transAttribute.anchoredPosition3D = s.anchoredPosition3D;
-                model.transAttribute.anchorMax = s.anchorMax;
-                model.transAttribute.anchorMin = s.anchorMin;
-                model.transAttribute.offsetMax = s.offsetMax;
-                model.transAttribute.offsetMin = s.offsetMin;
-                model.transAttribute.pivot = s.pivot;
-                model.transAttribute.sizeDelta = s.sizeDelta;
-                var ss = s.GetComponent<SizeScaling>();
-                if (ss != null)
+                for (int i = 0; i < coms.Length; i++)
                 {
-                    model.transAttribute.SizeScale = true;
-                    model.transAttribute.scaleType = ss.scaleType;
-                    model.transAttribute.sizeType = ss.sizeType;
-                    model.transAttribute.anchorType = ss.anchorType;
-                    model.transAttribute.parentType = ss.parentType;
-                    model.transAttribute.margin = ss.margin;
-                    model.transAttribute.DesignSize = ss.DesignSize;
+                    int index = coms[i];
+                    i++;
+                    int type = coms[i];
+                    var fs = buff.GetData(index) as FakeStruct;
+                    if (fs != null)
+                    {
+                        var dc = ModelManagerUI.Load(type);
+                        if (dc != null)
+                        {
+                            dc.Load(fs);
+                            components.Add(dc);
+                        }
+                    }
                 }
-                else model.transAttribute.SizeScale = false;
-                model.name = tar.name;
-                model.tag = tar.tag;
-                model.transAttribute.name =model.buffer.AddString(model.name);
-                model.transAttribute.tag = model.buffer.AddString(model.tag);
             }
+            Int16[] chi = fake.buffer.GetData(data.child) as Int16[];
+            if (chi != null)
+                for (int i = 0; i < chi.Length; i++)
+                {
+                    var fs = buff.GetData(chi[i]) as FakeStruct;
+                    if (fs != null)
+                    {
+                        ModelElement model = new ModelElement();
+                        model.Load(fs);
+                        child.Add(model);
+                        model.parent = this;
+                    }
+                }
+            name = buff.GetData(data.name) as string;
+            tag = buff.GetData(data.tag) as string;
+            Model = fake;
         }
-        public List<ModelElement> Child =new List<ModelElement>();
-        public GameObject Main;
-        public virtual void Load(GameObject tar)
+        public override void LoadToObject(Component com)
         {
-            Load(tar, this);
-            Main = tar;
+            for (int i = 0; i < components.Count; i++)
+                if (components[i] != null)
+                    components[i].LoadToObject(com);
+            Context = com as RectTransform;
+            LoadToObject(Context, ref data, this);
         }
-        public virtual void Save(GameObject tar)
+        static void LoadToObject(RectTransform com, ref ElementData data, ModelElement ui)
         {
-            Save(tar, this);
+            var trans = com as RectTransform;
+            trans.localRotation = data.localRotation;
+            trans.localPosition = data.localPosition;
+            trans.localScale = data.localScale;
+            trans.anchoredPosition = data.anchoredPosition;
+            trans.anchoredPosition3D = data.anchoredPosition3D;
+            trans.anchorMax = data.anchorMax;
+            trans.anchorMin = data.anchorMin;
+            trans.offsetMax = data.offsetMax;
+            trans.offsetMin = data.offsetMin;
+            trans.pivot = data.pivot;
+            trans.sizeDelta = data.sizeDelta;
+            trans.name = ui.name;
+            trans.tag = ui.tag;
+        }
+        public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
+        {
+            var trans = com as RectTransform;
+            if (trans == null)
+                return null;
+            FakeStruct fake = new FakeStruct(buffer, ElementData.ElementSize);
+            ElementData* ed = (ElementData*)fake.ip;
+            ed->localRotation = trans.localRotation;
+            ed->localPosition = trans.localPosition;
+            ed->localScale = trans.localScale;
+            ed->anchoredPosition = trans.anchoredPosition;
+            ed->anchoredPosition3D = trans.anchoredPosition3D;
+            ed->anchorMax = trans.anchorMax;
+            ed->anchorMin = trans.anchorMin;
+            ed->offsetMax = trans.offsetMax;
+            ed->offsetMin = trans.offsetMin;
+            ed->pivot = trans.pivot;
+            ed->sizeDelta = trans.sizeDelta;
+            ed->name = buffer.AddData(trans.name);
+            ed->tag = buffer.AddData(trans.tag);
+            var coms = com.GetComponents<Component>();
+            ed->type = ModelManagerUI.GetTypeIndex(coms);
+            List<Int16> tmp = new List<short>();
+            for (int i = 0; i < coms.Length; i++)
+            {
+                var rect = coms[i] as RectTransform;
+                if (rect == null)
+                {
+                    var ss = coms[i] as SizeScaling;
+                    if (ss != null)
+                    {
+                        ed->SizeScale = true;
+                        ed->scaleType = ss.scaleType;
+                        ed->sizeType = ss.sizeType;
+                        ed->anchorType = ss.anchorType;
+                        ed->parentType = ss.parentType;
+                        ed->margin = ss.margin;
+                        ed->DesignSize = ss.DesignSize;
+                    }
+                    else if (!(coms[i] is CanvasRenderer))
+                    {
+                        Int16 type = 0;
+                        var fs = ModelManagerUI.LoadFromObject(coms[i], buffer, ref type);
+                        if(type>0)
+                        {
+                            tmp.Add((Int16)buffer.AddData(fs));
+                            tmp.Add(type);
+                        }
+                    }
+                }
+            }
+            if (tmp.Count > 0)
+                ed->coms = buffer.AddData(tmp.ToArray());
+            int c = trans.childCount;
+            if (c > 0)
+            {
+                Int16[] buf = new short[c];
+                for (int i = 0; i < c; i++)
+                {
+                    var fs = LoadFromObject(trans.GetChild(i), buffer);
+                    buf[i] = (Int16)buffer.AddData(fs);
+                }
+                ed->child = buffer.AddData(buf);
+            }
+            return fake;
         }
 
+        public ModelElement FindChild(string name)
+        {
+            for (int i = 0; i < child.Count; i++)
+                if (child[i].name == name)
+                    return child[i];
+            return null;
+        }
+        public GameObject Main;
+#if UNITY_EDITOR
         public void AddSizeScale()
         {
-            if (transAttribute.SizeScale)
+            if (data.SizeScale)
             {
                 if(Main!=null)
                 {
                     var scale= Main.GetComponent<SizeScaleEx>();
                     if (scale == null)
                         scale = Main.AddComponent<SizeScaleEx>();
-                    scale.scaleType = transAttribute.scaleType;
-                    scale.sizeType = transAttribute.sizeType;
-                    scale.anchorType = transAttribute.anchorType;
-                    scale.parentType = transAttribute.parentType;
-                    scale.margin = transAttribute.margin;
-                    scale.DesignSize = transAttribute.DesignSize;
+                    scale.scaleType = data.scaleType;
+                    scale.sizeType = data.sizeType;
+                    scale.anchorType = data.anchorType;
+                    scale.parentType = data.parentType;
+                    scale.margin = data.margin;
+                    scale.DesignSize = data.DesignSize;
                 }
             }
         }
+#endif
+
         public static Vector2[] Anchors = new[] { new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f),new Vector2(1, 0.5f),
         new Vector2(0.5f, 1),new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1)};
         public static void Docking(RectTransform rect, ScaleType dock, Vector2 pSize, Vector2 ds)
@@ -269,7 +327,7 @@ namespace huqiang.UIModel
             var transform = ele.Main.transform;
             Vector2 size;
             Vector2 p = Anchors[0];
-            if (ele.transAttribute.parentType == ParentType.Tranfrom)
+            if (ele.data.parentType == ParentType.Tranfrom)
             {
                 var t = (transform.parent as RectTransform);
                 size = t.sizeDelta;
@@ -282,28 +340,28 @@ namespace huqiang.UIModel
             }
 
             RectTransform rect = transform as RectTransform;
-            Docking(rect, ele.transAttribute.scaleType, size, ele.transAttribute.DesignSize);
-            if (ele.transAttribute.sizeType == SizeType.Anchor)
+            Docking(rect, ele.data.scaleType, size, ele.data.DesignSize);
+            if (ele.data.sizeType == SizeType.Anchor)
             {
-                AnchorEx(rect, ele.transAttribute.anchorType,
-                    new Vector2(ele.transAttribute. margin.left, ele.transAttribute. margin.right), p, size);
+                AnchorEx(rect, ele.data.anchorType,
+                    new Vector2(ele.data. margin.left, ele.data. margin.right), p, size);
             }
-            else if (ele.transAttribute. sizeType == SizeType.Margin)
+            else if (ele.data. sizeType == SizeType.Margin)
             {
-                var mar = ele.transAttribute. margin;
-                if (ele.transAttribute.parentType == ParentType.BangsScreen)
+                var mar = ele.data. margin;
+                if (ele.data.parentType == ParentType.BangsScreen)
                     if (Scale.ScreenHeight / Scale.ScreenWidth > 2f)
                         mar.top += 88;
                 MarginEx(rect, mar, p, size);
             }
-            else if (ele.transAttribute.sizeType == SizeType.MarginRatio)
+            else if (ele.data.sizeType == SizeType.MarginRatio)
             {
                 var mar = new Margin();
-                mar.left = ele.transAttribute.margin.left * size.x;
-                mar.right = ele.transAttribute.margin.right * size.x;
-                mar.top = ele.transAttribute.margin.top * size.y;
-                mar.down = ele.transAttribute.margin.down * size.y;
-                if (ele.transAttribute.parentType == ParentType.BangsScreen)
+                mar.left = ele.data.margin.left * size.x;
+                mar.right = ele.data.margin.right * size.x;
+                mar.top = ele.data.margin.top * size.y;
+                mar.down = ele.data.margin.down * size.y;
+                if (ele.data.parentType == ParentType.BangsScreen)
                     if (Scale.ScreenHeight / Scale.ScreenWidth > 2f)
                         mar.top += 88;
                 MarginEx(rect, mar, p, size);
@@ -311,20 +369,13 @@ namespace huqiang.UIModel
         }
         public static void ScaleSize(ModelElement element)
         {
-            if (element.transAttribute.SizeScale)
+            if (element.data.SizeScale)
                 Resize(element);
-            var child = element.Child;
+            var child = element.child;
             for (int i = 0; i < child.Count; i++)
             {
                 ScaleSize(child[i]);
             }
-        }
-        public ModelElement FindChild(string name)
-        {
-            for (int i = 0; i < Child.Count; i++)
-                if (Child[i].name == name)
-                    return Child[i];
-            return null;
         }
     }
 }

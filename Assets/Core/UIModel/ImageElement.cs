@@ -1,4 +1,5 @@
 ﻿using huqiang.Data;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UIModel
 {
-    public unsafe struct ImageAttribute
+    public unsafe struct ImageData
     {
         public float alphaHit;
         public float fillAmount;
@@ -16,137 +17,84 @@ namespace huqiang.UIModel
         public Int32 fillOrigin;
         public bool preserveAspect;
         public Image.Type type;
-        public Int32 material;
         public Int32 shader;
         public Color color;
         public Int32 assetName;
         public Int32 textureName;
         public Int32 spriteName;
-        public static int Size = sizeof(ImageAttribute);
+        public static int Size = sizeof(ImageData);
         public static int ElementSize = Size / 4;
-        public static void LoadFromBuff(ref ImageAttribute img, void* p)
-        {
-            fixed (float* trans = &img.alphaHit)
-            {
-                Int32* a =(Int32*) trans;
-                Int32* b = (Int32*)p;
-                for (int i = 0; i < ElementSize; i++)
-                {
-                    *a = *b;
-                    a++;
-                    b++;
-                }
-            }
-        }
     }
-    public class ImageElement : ModelElement
+    public class ImageElement : DataConversion
     {
-        public ImageAttribute imageAttribute;
-
-        public Sprite sprite;
-        public Material material;
-        string assetName;
+        Image Context;
+        public ImageData data;
+        string shader;
+        public string assetName;
         public string textureName;
         public string spriteName;
-        public string shader;
-        string smat;
-        public unsafe override byte* LoadFromBuff(byte* point)
+        public unsafe override void Load(FakeStruct fake)
         {
-            point = base.LoadFromBuff(point);
-            ImageAttribute.LoadFromBuff(ref imageAttribute,point);
-            smat = buffer[imageAttribute.material] ;
-            shader = buffer[imageAttribute.shader] ;
-            assetName = buffer[imageAttribute.assetName] ;
-            textureName = buffer[imageAttribute.textureName] ;
-            spriteName = buffer[imageAttribute.spriteName] ;
-            return point + ImageAttribute.Size;
+            data = *(ImageData*)fake.ip;
+            shader = fake.buffer.GetData(data.shader) as string;
+            assetName = fake.buffer.GetData(data.assetName) as string;
+            textureName = fake.buffer.GetData(data.textureName) as string;
+            spriteName = fake.buffer.GetData(data.spriteName) as string;
         }
-        public unsafe override byte[] ToBytes()
+        public override void LoadToObject(Component game)
         {
-            int size = ElementAttribute.Size;
-            int tsize = ImageAttribute.Size;
-            byte[] buff = new byte[size + tsize];
-            fixed (byte* bp = &buff[0])
-            {
-                *(ElementAttribute*)bp = transAttribute;
-                byte* a = bp + size;
-                *(ImageAttribute*)a = imageAttribute;
-            }
-            return buff;
+            LoadToObject(game, ref data, this);
         }
-        static void Load(GameObject tar, ImageElement image)
+        public static void LoadToObject(Component game, ref ImageData dat, ImageElement image)
         {
-            var att = image.imageAttribute;
-            var a = tar.GetComponent<Image>();
-            a.alphaHitTestMinimumThreshold = att.alphaHit;
-            a.fillAmount = att.fillAmount;
-            a.fillCenter = att.fillCenter;
-            a.fillClockwise = att.fillClockwise;
-            a.fillMethod = att.fillMethod;
-            a.fillOrigin = att.fillOrigin;
-            a.preserveAspect = att.preserveAspect;
-            a.type = att.type;
+            var a = game.GetComponent<Image>();
+            if (a == null)
+                return;
+            a.alphaHitTestMinimumThreshold = dat.alphaHit;
+            a.fillAmount = dat.fillAmount;
+            a.fillCenter = dat.fillCenter;
+            a.fillClockwise = dat.fillClockwise;
+            a.fillMethod = dat.fillMethod;
+            a.fillOrigin = dat.fillOrigin;
+            a.preserveAspect = dat.preserveAspect;
+            a.type = dat.type;
             a.raycastTarget = false;
-            a.color = att.color;
-            if (image.smat != null)
-                if (image.smat != "Default UI Material")
-                     a.material = new Material(Shader.Find(image.shader));
+            a.color = dat.color;
+            if (image.shader != "Default UI Material")
+                a.material = new Material(Shader.Find(image.shader));
             if (image.spriteName != null)
                 a.sprite = ElementAsset.FindSprite(image.assetName, image.textureName, image.spriteName);
+            else a.sprite = null;
+            image.Context = a;
         }
-        static void Save(GameObject tar,ImageElement image)
+        public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
         {
-            var b = tar.GetComponent<Image>();
-            if (b != null)
+            var img = com as Image;
+            if (img == null)
+                return null;
+            FakeStruct fake = new FakeStruct(buffer, ImageData.ElementSize);
+            ImageData* data = (ImageData*)fake.ip;
+            data->alphaHit = img.alphaHitTestMinimumThreshold;
+            data->fillAmount = img.fillAmount;
+            data->fillCenter = img.fillCenter;
+            data->fillClockwise = img.fillClockwise;
+            data->fillMethod = img.fillMethod;
+            data->fillOrigin = img.fillOrigin;
+            data->preserveAspect = img.preserveAspect;
+            data->type = img.type;
+            data->color = img.color;
+            if (img.sprite != null)
             {
-                image.imageAttribute.alphaHit = b.alphaHitTestMinimumThreshold;
-                image.imageAttribute.fillAmount = b.fillAmount;
-                image.imageAttribute.fillCenter = b.fillCenter;
-                image.imageAttribute.fillClockwise = b.fillClockwise;
-                image.imageAttribute.fillMethod = b.fillMethod;
-                image.imageAttribute.fillOrigin = b.fillOrigin;
-                image.imageAttribute.preserveAspect = b.preserveAspect;
-                if (b.sprite != null)
-                {
-                    image.imageAttribute.spriteName = image.buffer.AddString(b.sprite.name);
-                    string tn = b.sprite.texture.name;
-                    image.imageAttribute.textureName = image.buffer.AddString(tn);
-                    var an = ElementAsset.TxtureFormAsset(tn);
-                    if (an != null)
-                        image.imageAttribute.assetName = image.buffer.AddString(an);
-                    else image.imageAttribute.assetName = -1;
-                }
-                else image.imageAttribute.spriteName = -1;
-                image.imageAttribute.type = b.type;
-                var mat = b.material;
-                image.imageAttribute.material = image.buffer.AddString(mat.name);
-                image.imageAttribute.shader = image.buffer.AddString(mat.shader.name);
-                image.imageAttribute.color = b.color;
+                var tn = img.sprite.texture.name;
+                var sn = img.sprite.name;
+                var an = ElementAsset.TxtureFormAsset(img.sprite.texture.name);
+                data->assetName = buffer.AddData(an);
+                data->textureName = buffer.AddData(tn);
+                data->spriteName = buffer.AddData(sn);
             }
-        }
-        public override void Load(GameObject tar)
-        {
-            base.Load(tar);
-            Load(tar, this);
-        }
-        public override void Save(GameObject tar)
-        {
-            base.Save(tar);
-            Save(tar, this);
-        }
-        public void SetSprite(Sprite sprite)
-        {
-            Main.GetComponent<Image>().sprite = sprite;
-        }
-    }
-    public class ViewportElement : ImageElement
-    {
-        public override void Load(GameObject tar)
-        {
-            base.Load(tar);
-            var mask = tar.GetComponent<Mask>();
-            if(mask!=null)
-            mask.showMaskGraphic = false;
+            if (img.material != null)
+                data->shader = buffer.AddData(img.material.shader.name);
+            return fake;
         }
     }
 }

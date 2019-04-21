@@ -130,8 +130,7 @@ namespace huqiang
         public override void Dispatch(byte[] dat, IPEndPoint endPoint)
         {
             var link = CreateNewLink(endPoint);
-            lock (link.metaData)
-                link.metaData.Enqueue(dat);
+            link.metaData.Enqueue(dat);
         }
         public void RemoveLink(KcpLink link)
         {

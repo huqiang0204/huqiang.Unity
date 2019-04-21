@@ -20,20 +20,20 @@ namespace huqiang.Data
         public int BufferLenth { get { return mlen; } }
         public int Count {
             get {
-                int a=end - start;
+                int a = end - start;
                 if (a < 0)
                     a += mlen;
                 return a;
             }
         }
-        public void Push(T t)
+        public void Enqueue(T t)
         {
             buffer[end] = t;
             if (end >= mlen - 1)
                 end = 0;
             else end++;
         }
-        public T Pop()
+        public T Dequeue()
         {
             if (start != end)
             {

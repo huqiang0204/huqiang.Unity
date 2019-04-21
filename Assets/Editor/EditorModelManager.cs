@@ -106,13 +106,13 @@ public class EditorModelManager
     {
         objects.Clear();
     }
-    public static ModelElement LoadToGame(string mod, object o, Transform parent, string filter = "mod")
+    public static UIElement LoadToGame(string mod, object o, Transform parent, string filter = "mod")
     {
         var m = ModelManagerUI.FindModel(mod);
         LoadToGame(m, o, parent, filter);
         return m;
     }
-    public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "mod")
+    public static GameObject LoadToGame(UIElement mod, object o, Transform parent, string filter = "mod")
     {
         if (mod == null)
         {
@@ -169,7 +169,7 @@ public class EditorModelManager
         //    GetObject(mod, o, mod);
         return g;
     }
-    static void GetObject(ModelElement t, object o, ModelElement mod)
+    static void GetObject(UIElement t, object o, UIElement mod)
     {
         //var m = o.GetType().GetField(t.name);
         //if (m != null)

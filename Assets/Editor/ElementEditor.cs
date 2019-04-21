@@ -95,7 +95,7 @@ public class ElementEditor : Editor
             ModelManagerUI.InitialComponent();
             ModelManagerUI.InitialModel();
             var all = ModelManagerUI.LoadModels(ui, "assTest");
-            ModelElement element = new ModelElement();
+            UIElement element = new UIElement();
             element.Load(all.models.fakeStruct);
             element.Apply();
         }

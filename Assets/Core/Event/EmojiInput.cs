@@ -18,7 +18,7 @@ namespace huqiang
             public RawImage line;
             public EmojiText input;
             public Image done;
-            public ScrollY scroll;
+            //public ScrollY scroll;
         }
         class ScrollItem
         {
@@ -51,11 +51,11 @@ namespace huqiang
             //if (model == null)
             //    model = ModelManager.LoadToGame("EmojiInput", view, Page.Root);
             //else ModelManager.LoadToGame(model,view,Page.Root);
-            view.scroll.DataLength = EmojiMap.Length;
-            view.scroll.ItemObject = typeof(ScrollItem);
-            view.scroll.ItemSize = new Vector2(108,108);
-            view.scroll.ItemUpdate = ItemUpdate;
-            view.scroll.Refresh();
+            //view.scroll.DataLength = EmojiMap.Length;
+            //view.scroll.ItemObject = typeof(ScrollItem);
+            //view.scroll.ItemSize = new Vector2(108,108);
+            //view.scroll.ItemUpdate = ItemUpdate;
+            //view.scroll.Refresh();
             view.cancel.Click = (o, e) => { ModelManager.RecycleGameObject(model.Main); };
         }
         static CharUV charUV;
