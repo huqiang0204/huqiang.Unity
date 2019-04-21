@@ -1,5 +1,4 @@
 ﻿using huqiang;
-using huqiang.UI;
 using huqiang.UIModel;
 using System.Collections;
 using System.Collections.Generic;

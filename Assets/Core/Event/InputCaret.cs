@@ -17,14 +17,14 @@ namespace huqiang
             {
                 if (m_Caret == null)
                 {
-                    var g = ModelManager.CreateNew(ComponentType.RectTransform | ComponentType.CustomRawImage);
+                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
                 }
                 else if (m_Caret.name == "buff")
                 {
-                    var g = ModelManager.CreateNew(ComponentType.RectTransform | ComponentType.CustomRawImage);
+                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;

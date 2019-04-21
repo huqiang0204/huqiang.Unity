@@ -1,6 +1,5 @@
 ﻿using huqiang;
-using huqiang.UI;
-using huqiang.UIComposite;
+using huqiang.UIModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,8 +35,8 @@ public class EditorModelManager
                 var str = ss[ss.Length - 1];
                 ss = str.Split('.');
                 var sp = AssetDatabase.LoadAllAssetsAtPath(path);
-                if (sp != null)
-                    if (sp.Length > 0)
+                if(sp!=null)
+                    if(sp.Length>0)
                     {
                         objects.Add(sp);
                         return sp;
@@ -53,9 +52,9 @@ public class EditorModelManager
             var objs = objects[i];
             if (objs != null)
             {
-                if (objs.Length > 0)
-                    if (objs[0].name == tname)
-                        return objs[0] as Texture;
+                if(objs.Length>0)
+                if (objs[0].name == tname)
+                    return objs[0] as Texture;
             }
         }
         var os = LoadSprite(tname);
@@ -73,17 +72,17 @@ public class EditorModelManager
             var objs = objects[i];
             if (objs != null)
             {
-                if (objs.Length > 0)
-                    if (objs[0] != null)
+                if(objs.Length>0)
+                    if (objs[0] !=null)
                         if (objs[0].name == tname)
-                        {
-                            for (int j = 1; j < objs.Length; j++)
-                            {
-                                if (objs[j] != null)
-                                    if (objs[j].name == name)
-                                        return objs[j] as Sprite;
-                            }
-                        }
+                {
+                    for (int j = 1; j < objs.Length; j++)
+                    {
+                                if(objs[j]!=null)
+                        if (objs[j].name == name)
+                            return objs[j] as Sprite;
+                    }
+                }
             }
         }
         var os = LoadSprite(tname);
@@ -93,9 +92,9 @@ public class EditorModelManager
             {
                 for (int j = 1; j < os.Length; j++)
                 {
-                    if (os[j] != null)
-                        if (os[j].name == name)
-                            return os[j] as Sprite;
+                    if(os[j]!=null)
+                    if (os[j].name == name)
+                        return os[j] as Sprite;
                 }
             }
         }
@@ -106,13 +105,13 @@ public class EditorModelManager
     {
         objects.Clear();
     }
-    public static UIElement LoadToGame(string mod, object o, Transform parent, string filter = "mod")
+    public static ModelElement LoadToGame(string mod, object o, Transform parent, string filter = "mod")
     {
         var m = ModelManagerUI.FindModel(mod);
         LoadToGame(m, o, parent, filter);
         return m;
     }
-    public static GameObject LoadToGame(UIElement mod, object o, Transform parent, string filter = "mod")
+    public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "mod")
     {
         if (mod == null)
         {
@@ -134,13 +133,13 @@ public class EditorModelManager
             t.SetParent(parent);
         mod.LoadToObject(t);
         var typ = mod.data.type;
-        if ((typ & 0x2) > 0)
+        if ((typ&0x2)>0)
         {
             var child = mod.components;
-            for (int j = 0; j < child.Count; j++)
+            for (int j = 0;j < child.Count;j++)
             {
-                ImageE e = child[j] as ImageE;
-                if (e != null)
+                ImageElement e = child[j] as ImageElement;
+               if(e!=null)
                 {
                     mod.Context.GetComponent<Image>().sprite = FindSprite(e.textureName, e.spriteName);
                     break;
@@ -152,7 +151,7 @@ public class EditorModelManager
             var child = mod.components;
             for (int j = 0; j < child.Count; j++)
             {
-                RawImageE e = child[j] as RawImageE;
+                RawImageElement e = child[j] as RawImageElement;
                 if (e != null)
                 {
                     mod.Context.GetComponent<RawImage>().texture = FindTexture(e.textureName);
@@ -165,28 +164,28 @@ public class EditorModelManager
         var c = mod.child;
         for (int i = 0; i < c.Count; i++)
             LoadToGame(c[i], o, t, filter);
-        //if (o != null)
-        //    GetObject(mod, o, mod);
+        if (o != null)
+            GetObject(t, o, mod);
         return g;
     }
-    static void GetObject(UIElement t, object o, UIElement mod)
+    static void GetObject(Transform t, object o, ModelElement mod)
     {
-        //var m = o.GetType().GetField(t.name);
-        //if (m != null)
-        //{
-        //    if (m.FieldType == typeof(GameObject))
-        //        m.SetValue(o, t.gameObject);
-        //    else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
-        //        m.SetValue(o, EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType));
-        //    else if (typeof(UIComposite).IsAssignableFrom(m.FieldType))
-        //    {
-        //        var obj = Activator.CreateInstance(m.FieldType) as UIComposite;
-        //        obj.Initial(mod);
-        //        m.SetValue(o, obj);
-        //    }
-        //    else if (typeof(Component).IsAssignableFrom(m.FieldType))
-        //        m.SetValue(o, t.GetComponent(m.FieldType));
-        //}
+        var m = o.GetType().GetField(t.name);
+        if (m != null)
+        {
+            if (m.FieldType == typeof(GameObject))
+                m.SetValue(o, t.gameObject);
+            else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
+                m.SetValue(o, EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType));
+            else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
+            {
+                var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
+                obj.Initial(t as RectTransform, mod);
+                m.SetValue(o, obj);
+            }
+            else if (typeof(Component).IsAssignableFrom(m.FieldType))
+                m.SetValue(o, t.GetComponent(m.FieldType));
+        }
     }
 }
 

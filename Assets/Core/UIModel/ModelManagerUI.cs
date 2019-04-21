@@ -1,5 +1,6 @@
 ﻿using huqiang.Data;
-using huqiang.Manager2D;
+using huqiang.ModelManager2D;
+using huqiang.Pool;
 using System;
 using System.Collections.Generic;
 using System.IO;

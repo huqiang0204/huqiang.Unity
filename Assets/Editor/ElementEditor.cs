@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.UI;
+using huqiang.UIModel;
 using System.IO;
 using UGUI;
 using UnityEditor;
@@ -51,7 +51,6 @@ public class ElementEditor : Editor
                 }
             }
         }
-
     }
     static void Create(string Assetname, string dicpath, GameObject gameObject)
     {
@@ -83,7 +82,7 @@ public class ElementEditor : Editor
                     ModelManagerUI.InitialComponent();
                     ModelManagerUI.InitialModel();
                     ModelManagerUI.LoadModels(ui, "assTest");
-                    EditorModelManager.LoadToGame(CloneName, null, root, "");
+
                 }
         }
     }
@@ -95,9 +94,9 @@ public class ElementEditor : Editor
             ModelManagerUI.InitialComponent();
             ModelManagerUI.InitialModel();
             var all = ModelManagerUI.LoadModels(ui, "assTest");
-            UIElement element = new UIElement();
-            element.Load(all.models.fakeStruct);
-            element.Apply();
+            var models = all.models.child;
+            for(int i=0;i<models.Count;i++)
+            EditorModelManager.LoadToGame(models[i], null, root, "");
         }
     }
 }

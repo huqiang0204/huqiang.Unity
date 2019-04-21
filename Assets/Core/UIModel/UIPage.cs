@@ -80,12 +80,9 @@ public class UIBase
     public virtual void Cmd(string cmd, object dat)
     {
     }
-    public virtual void Cmd(DataBuffer dat)
+
+    public virtual void Cmd(Int32 cmd,Int32 type, object dat)
     {
-    }
-    public virtual void FullCmd(reqs reqs, object dat)
-    {
-        Cmd(reqs.cmd,dat);
     }
     public virtual void ReSize()
     {
@@ -145,7 +142,6 @@ public class Page:UIBase
         }
         EventCallBack.ClearEvent();
         AnimationManage.Manage.ReleaseAll();
-        LeanTween.cancelAll();
         if (CurrentPage != null)
         {
             CurrentPage.Save();
@@ -168,7 +164,6 @@ public class Page:UIBase
                 }
             EventCallBack.ClearEvent();
             AnimationManage.Manage.ReleaseAll();
-            LeanTween.cancelAll();
             if (CurrentPage != null)
                 CurrentPage.Dispose();
             var t = Activator.CreateInstance(type) as Page;
@@ -198,10 +193,10 @@ public class Page:UIBase
         if (CurrentPage != null)
             CurrentPage.Cmd(cmd, obj);
     }
-    public static void UpdateData(reqs r,object obj)
+    public static void UpdateData(Int32 cmd,Int32 type, object obj)
     {
         if (CurrentPage != null)
-            CurrentPage.FullCmd(r,obj);
+            CurrentPage.Cmd(cmd,type,obj);
     }
     public static void Refresh(float time)
     {

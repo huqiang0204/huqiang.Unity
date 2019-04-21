@@ -1,6 +1,4 @@
 ﻿using huqiang.Data;
-using huqiang.UI;
-using huqiang.UIEvent;
 using huqiang.UIModel;
 using UGUI;
 using UnityEngine;
@@ -13,7 +11,6 @@ namespace huqiang
         {
             ThreadPool.Initial();
             EmojiText.Emoji = UnityEngine.Resources.Load<Texture2D>("emoji");
-            ModelManager.Initial();
             if(Application.platform == RuntimePlatform.Android |Application.platform==RuntimePlatform.IPhonePlayer)
             {
                 UserAction.inputType = UserAction.InputType.OnlyTouch;
@@ -37,33 +34,17 @@ namespace huqiang
                 uiRoot.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
                 UIRoot = new GameObject("uiRoot", typeof(RectTransform)).transform as RectTransform;
             }
-            Page.Root = new UI.UIElement();
-            Page.Root.data.active = true;
-            Page.Root.Context = new GameObject("uiRoot",typeof(RectTransform)).transform as RectTransform;
-            Page.Root.Context.SetParent(uiRoot);
-            Page.Root.Context.localPosition = Vector3.zero;
-            Page.Root.Context.localScale = Vector3.one;
-            ModelManagerUI.Initial();
-            BaseEvent.InsertRoot(Page.Root);
         }
         public static float AllTime;
         public static void Update()
         {
-            //AnimationManage.Manage.Update();
-            //UserAction.DispatchEvent();
-            UserInput.DispatchEvent();
-            ThreadPool.AddMission(SubThread,null);
+            AnimationManage.Manage.Update();
+            UserAction.DispatchEvent();
             ThreadPool.ExtcuteMain();
-            Page.Root.Apply();
-            //Resize();
-            //Page.Refresh(UserAction.TimeSlice);
+            Resize();
+            Page.Refresh(UserAction.TimeSlice);
             AllTime += Time.deltaTime;
             //DownloadManager.UpdateMission();
-        }
-        static void SubThread(object obj)
-        {
-            UserInput.SubDispatch();
-            Page.Refresh(UserInput.TimeSlice);
         }
         static void Resize()
         {
