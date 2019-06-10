@@ -21,6 +21,7 @@ namespace huqiang
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
+                    m_Caret.material = new Material(Shader.Find("Custom/UIDef"));
                 }
                 else if (m_Caret.name == "buff")
                 {
@@ -28,6 +29,7 @@ namespace huqiang
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
+                    m_Caret.material = new Material(Shader.Find("Custom/UIDef"));
                 }
                 return m_Caret;
             }
