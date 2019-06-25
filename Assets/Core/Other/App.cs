@@ -4,6 +4,7 @@ using UGUI;
 using UnityEngine;
 using huqiang.Manager2D;
 using UnityEngine.UI;
+using huqiang.UIEvent;
 
 namespace huqiang
 {
@@ -74,12 +75,12 @@ namespace huqiang
         {
             AnimationManage.Manage.Update();
             UserAction.DispatchEvent();
-       
+            Keyboard.DispatchEvent();
             ThreadMission.ExtcuteMain();
             Resize();
             Page.Refresh(UserAction.TimeSlice);
             AllTime += Time.deltaTime;
-            DownloadManager.UpdateMission();
+            //DownloadManager.UpdateMission();
         }
         static void Resize()
         {
