@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using huqiang.Data;
+using huqiang.UIModel;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class GridScroll:ScrollContent
     {

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using huqiang.UIModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class ScrollExC : ModelInital
     {

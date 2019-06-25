@@ -1,9 +1,10 @@
 ﻿using huqiang.Data;
+using huqiang.UIModel;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class TreeViewNode
     {

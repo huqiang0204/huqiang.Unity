@@ -1,7 +1,8 @@
-﻿using System;
+﻿using huqiang.UIModel;
+using System;
 using UnityEngine;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class DragContent : ModelInital
     {

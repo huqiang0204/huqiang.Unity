@@ -1,4 +1,5 @@
 ﻿using huqiang;
+using huqiang.UIModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class DropdownEx : ModelInital
     {

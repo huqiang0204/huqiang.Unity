@@ -5,7 +5,7 @@ using System.Text;
 using huqiang.UIModel;
 using UnityEngine;
 
-namespace huqiang
+namespace huqiang.UIComposite
 {
     public class LinkerMod
     {

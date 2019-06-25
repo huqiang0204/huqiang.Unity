@@ -1,11 +1,12 @@
 ﻿using huqiang;
 using huqiang.Data;
+using huqiang.UIModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace huqiang.UIModel
+namespace huqiang.UIComposite
 {
     public class ScrollItem
     {
