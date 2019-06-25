@@ -7,12 +7,44 @@ using UnityEngine;
 
 namespace huqiang.UIModel
 {
+    public class ScrollItem
+    {
+        public int index = -1;
+        public GameObject target;
+        public object datacontext;
+        public object obj;
+    }
     public enum ScrollType
     {
         None, Loop, BounceBack
     }
     public class ScrollContent : ModelInital
     {
+        class Constructor
+        {
+            public virtual object Create() { return null; }
+            public virtual void Call(object obj, object dat, int index) { }
+            public bool hotfix;
+            public Action<object, object, int> Update;
+            public Func<GameObject, object> reflect;
+        }
+        class Middleware<T, U> : Constructor where T : class, new()
+        {
+            public override object Create()
+            {
+                return new T();
+            }
+            public Action<T, U, int> Invoke;
+            public override void Call(object obj, object dat, int index)
+            {
+                if (Invoke != null)
+                    Invoke(obj as T, (U)dat, index);
+            }
+        }
+        /// <summary>
+        /// 滚动公差值
+        /// </summary>
+        public static float Tolerance = 0.25f;
         public ScrollType scrollType = ScrollType.BounceBack;
         public static readonly Vector2 Center = new Vector2(0.5f, 0.5f);
         public RectTransform ScrollView;
@@ -36,21 +68,8 @@ namespace huqiang.UIModel
             }
             get { return model; }
         }
+        public ModelElement[] ItemMods;
         public ModelElement Model;
-        public void SetItemModel(int index)
-        {
-            if (index < 0)
-                return;
-            if (Model == null)
-                return;
-            if (index >= Model.child.Count)
-                return;
-            var mod = Model.child[index];
-            if (mod != null)
-                ItemSize = mod.data.sizeDelta;
-            ItemMod = mod;
-        }
-        public Action<object , object , int > ItemUpdate;
         IList dataList;
         Array array;
         FakeArray fakeStruct;
@@ -110,7 +129,7 @@ namespace huqiang.UIModel
                 return m_len;
             }
         }
-        protected  object GetData(int index)
+        public  object GetData(int index)
         {
             if (dataList != null)
                 return dataList[index];
@@ -119,95 +138,104 @@ namespace huqiang.UIModel
             return null;
         }
         public Vector2 ItemOffset = Vector2.zero;
-        public List<ScrollItem> Items;
-        ScrollItem[] TmpPool;
-        int tmpPoint = 0;
-        protected ScrollItem[] Buff;
-        int buffPoint=0;
+        public List<ScrollItem> Items=new List<ScrollItem>();
+        List<ScrollItem> Buffer = new List<ScrollItem>();
+        List<ScrollItem> Recycler = new List<ScrollItem>();
         protected int max_count;
-        public ScrollContent()
-        {
-            Items = new List<ScrollItem>();
-            Buff =new ScrollItem[512];
-            TmpPool = new ScrollItem[1024];
-        }
-        /// <summary>
-        /// 当无法使用跨域反射时，使用此委托进行间接反射
-        /// </summary>
-        public Action<ScrollItem , GameObject > Reflection;
         /// <summary>
         /// 当某个ui超出Mask边界，被回收时调用
         /// </summary>
         public Action<ScrollItem> ItemRecycle;
+        Constructor creator;
         public override void Initial(RectTransform rect, ModelElement model)
         {
             ScrollView = rect;
+            var child = model.child;
+            int c = child.Count;
+            if (c > 0)
+            {
+                ItemMods = child.ToArray();
+                child.Clear();
+                ItemMod = ItemMods[0];
+                ItemSize = ItemMods[0].data.sizeDelta;
+            }
+        }
+        public void SetMod(int index)
+        {
+            if (ItemMods == null)
+                return;
+            if (index < 0)
+                index = 0;
+            if (index >= ItemMods.Length)
+                index = ItemMods.Length - 1;
+            ItemMod = ItemMods[index];
+            ItemSize = ItemMods[index].data.sizeDelta;
         }
         public virtual void Refresh(float x = 0, float y = 0)
         {
         }
         protected void Initialtems()
         {
-            int x =(int)( Size.x / ItemSize.x)+2;
+            int x =(int)(Size.x / ItemSize.x)+2;
             int y= (int)(Size.y/ ItemSize.y) + 2;
             max_count = x * y;
         }
-        protected void PushItems()
-        {
-            int c = Items.Count;
-            tmpPoint = c;
-            int top = c - 1;
-            for (int i = 0; i < c; i++)
-            {
-                Items[i].target.SetActive(false);
-                TmpPool[top] = Items[i];
-                top--;
-            }
-        }
-        protected ScrollItem PopItem(int index)
-        {
-            for(int i=0;i<tmpPoint;i++)
-            {
-                var t = TmpPool[i];
-                if (index==t.index)
-                {
-                    tmpPoint--;
-                    TmpPool[i] = TmpPool[tmpPoint];
-                    t.target.SetActive(true);
-                    return t;
-                }
-            }
-            var it = CreateItem();
-            Items.Add(it);
-            return it;
-        }
         protected ScrollItem CreateItem()
         {
-            if (buffPoint> 0)
+            if (Recycler.Count > 0)
             {
-                buffPoint--;
-                var it = Buff[buffPoint];
+                var it = Recycler[0];
                 it.target.SetActive(true);
+                it.index = -1;
+                Recycler.RemoveAt(0);
                 return it;
             }
-            object obj = null;
-            if (ItemObject != typeof(GameObject))
-                obj = Activator.CreateInstance(ItemObject);
-            GameObject g;
-            if (Reflection == null)
-                g = ModelManagerUI.LoadToGame(ItemMod, obj, null, "");
-            else g = ModelManagerUI.LoadToGame(ItemMod,null,null,"");
-            var t = g.transform;
-            t.SetParent(ScrollView);
-            t.localPosition = new Vector3(10000, 10000);
-            t.localScale = Vector3.one;
-            t.localEulerAngles = Vector3.zero;
+            GameObject go = null;
             ScrollItem a = new ScrollItem();
-            a.target = g;
-            a.obj = obj;
-            if (Reflection != null)
-                Reflection(a, a.target);
+            if (creator != null)
+            {
+                if (creator.hotfix)
+                {
+                    go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView, "");
+                    if (creator.reflect != null)
+                        a.obj = creator.reflect(go);
+                    else a.obj = go;
+                    a.target = go;
+                }
+                else
+                {
+                    a.obj = creator.Create();
+                    go = ModelManagerUI.LoadToGame(ItemMod, a.obj, ScrollView, "");
+                    a.target = go;
+                }
+            }
+            else {
+                go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView, "");
+                a.target = go;
+                a.obj = go;
+            }
             return a;
+        }
+        public void SetItemUpdate<T, U>(Action<T, U, int> action) where T : class, new()
+        {
+            Clear();
+            var m = new Middleware<T, U>();
+            m.Invoke = action;
+            creator = m;
+        }
+        /// <summary>
+        /// 热更新无法跨域,使用此函数
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="reflect"></param>
+        public void SetItemUpdate(Action<object, object, int> action, Func<GameObject, object> reflect)
+        {
+            Clear();
+            var m = new Middleware<ModelElement, object>();
+            m.Update = action;
+            m.hotfix = true;
+            m.reflect = reflect;
+            creator = m;
         }
         /// <summary>
         /// 回收范围内的条目
@@ -223,7 +251,7 @@ namespace huqiang.UIModel
                 int index = Items[c].index;
                 if (index >= down & index <= top)
                 {
-                    RecycleItem(it, c);
+                    RecycleItem(it);
                 }
             }
         }
@@ -241,26 +269,9 @@ namespace huqiang.UIModel
                 int index = Items[c].index;
                 if (index < down | index > top)
                 {
-                    RecycleItem(it, c);
+                    RecycleItem(it);
                 }
             }
-        }
-        protected void RecycleItem(ScrollItem it, int index)
-        {
-            Items.RemoveAt(index);
-            it.target.SetActive(false);
-            if(buffPoint<512)
-            {
-                it.index = -1;
-                Buff[buffPoint] = it;
-                buffPoint++;
-            }
-            else
-            {
-                ModelManagerUI.RecycleGameObject(it.target);
-            }
-            if (ItemRecycle != null)
-                ItemRecycle(it);
         }
         public virtual void Order(float os, bool force = false)
         {
@@ -272,30 +283,161 @@ namespace huqiang.UIModel
                 var g = Items[i];
                 ModelManagerUI.RecycleGameObject(g.target);
             }
-            Items.Clear();
-            for(int i=0;i<buffPoint;i++)
+            for (int i = 0; i < Recycler.Count; i++)
             {
-                var g = Buff[i];
+                var g = Recycler[i];
                 ModelManagerUI.RecycleGameObject(g.target);
             }
-            buffPoint = 0;
+            Items.Clear();
+            Recycler.Clear();
+        }
+        protected void PushItems()
+        {
+            for (int i = 0; i < Items.Count; i++)
+                Items[i].target.SetActive(false);
+            Buffer.AddRange(Items);
+            Items.Clear();
+        }
+        protected ScrollItem PopItem(int index)
+        {
+            for (int i = 0; i < Buffer.Count; i++)
+            {
+                var t = Buffer[i];
+                if (t.index == index)
+                {
+                    Buffer.RemoveAt(i);
+                    t.target.SetActive(true);
+                    return t;
+                }
+            }
+            var it = CreateItem();
+            return it;
+        }
+        protected void RecycleItem(ScrollItem it)
+        {
+            it.target.SetActive(false);
+            Recycler.Add(it);
+            if (ItemRecycle != null)
+                ItemRecycle(it);
         }
         protected void RecycleItem(ScrollItem[] items)
         {
-            if (items == null)
-                return;
+            Recycler.AddRange(items);
             for (int i = 0; i < items.Length; i++)
             {
-                var it = items[i];
-                if (buffPoint < 512)
+                items[i].target.SetActive( false);
+            }
+        }
+        protected Vector2 ScrollNone(EventCallBack eventCall, ref Vector2 v, ref float x, ref float y)
+        {
+            Vector2 v2 = Vector2.zero;
+            float vx = x - v.x;
+            if (vx < 0)
+            {
+                x = 0;
+                eventCall.VelocityX = 0;
+                v.x = 0;
+            }
+            else if (vx + Size.x > ActualSize.x)
+            {
+                x = ActualSize.x - Size.x;
+                eventCall.VelocityX = 0;
+                v.x = 0;
+            }
+            else
+            {
+                x -= v.x;
+                v2.x = v.x;
+            }
+            float vy = y + v.y;
+            if (vy < 0)
+            {
+                y = 0;
+                eventCall.VelocityY = 0;
+                v.y = 0;
+            }
+            else if (vy + Size.y > ActualSize.y)
+            {
+                y = ActualSize.y - Size.y;
+                eventCall.VelocityY = 0;
+                v.y = 0;
+            }
+            else
+            {
+                y += v.y;
+                v2.y = v.y;
+            }
+            return v2;
+        }
+        protected Vector2 ScrollLoop(EventCallBack eventCall, ref Vector2 v, ref float x, ref float y)
+        {
+            x -= v.x;
+            y += v.y;
+            if (x < 0)
+                x += ActualSize.x;
+            else x %= ActualSize.x;
+            if (y < 0)
+                y += ActualSize.y;
+            else y %= ActualSize.y;
+            return v;
+        }
+        protected Vector2 BounceBack(EventCallBack eventCall, ref Vector2 v, ref float x, ref float y)
+        {
+            x -= v.x;
+            y += v.y;
+            if (!eventCall.Pressed)
+            {
+                if (x < 0)
                 {
-                    Buff[buffPoint] = it;
-                    buffPoint++;
-                    it.target.SetActive(false);
+                    if (v.x > 0)
+                        if (eventCall.DecayRateX >= 0.99f)
+                        {
+                            eventCall.DecayRateX = 0.9f;
+                            eventCall.VelocityX = eventCall.VelocityX;
+                        }
+                }
+                else if (x + Size.x > ActualSize.x)
+                {
+                    if (v.x < 0)
+                        if (eventCall.DecayRateX >= 0.99f)
+                        {
+                            eventCall.DecayRateX = 0.9f;
+                            eventCall.VelocityX = eventCall.VelocityX;
+                        }
+                }
+                if (y < 0)
+                {
+                    if (v.y < 0)
+                        if (eventCall.DecayRateY >= 0.99f)
+                        {
+                            eventCall.DecayRateY = 0.9f;
+                            eventCall.VelocityY = eventCall.VelocityY;
+                        }
+                }
+                else if (y + Size.y > ActualSize.y)
+                {
+                    if (v.y > 0)
+                        if (eventCall.DecayRateY >= 0.99f)
+                        {
+                            eventCall.DecayRateY = 0.9f;
+                            eventCall.VelocityY = eventCall.VelocityY;
+                        }
+                }
+            }
+            return v;
+        }
+        protected void ItemUpdate(object obj, object dat, int index)
+        {
+            if (creator != null)
+            {
+                if (creator.hotfix)
+                {
+                    if (creator.Update != null)
+                        creator.Update(obj, dat, index);
                 }
                 else
                 {
-                    ModelManagerUI.RecycleGameObject(it.target);
+                    creator.Call(obj, dat, index);
                 }
             }
         }

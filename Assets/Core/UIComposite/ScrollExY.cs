@@ -34,7 +34,7 @@ namespace huqiang.UIModel
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = Center;
             eventCall.CutRect = true;
             Model = model;
-            SetItemModel(0);
+            //SetItemModel(0);
         }
         public Action<ScrollExY, Vector2> Scroll;
         public Action<ScrollExY, Vector2> ScrollEnd;
@@ -173,13 +173,8 @@ namespace huqiang.UIModel
             a.target.SetActive(true);
             if (force | a.index != index)
             {
-                if (ItemUpdate != null)
-                {
-                    if (a.obj == null)
-                        ItemUpdate(a.target, dat, index);
-                    else ItemUpdate(a.obj, dat, index);
-                }
                 a.datacontext = dat;
+                ItemUpdate(a.obj, dat, index);
             }
             return false;
         }

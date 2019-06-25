@@ -95,7 +95,7 @@ namespace huqiang.UIModel
                 if (ItemMod != null)
                     m_scroll.ItemMod = ItemMod;
                 m_scroll.BindingData= BindingData;
-                m_scroll.ItemUpdate = ItemUpdate;
+                m_scroll.SetItemUpdate<object, object>(ItemUpdate);
                 m_scroll.eventCall.LostFocus = LostFocus;
                 m_scroll.eventCall.DataContext = this;
 

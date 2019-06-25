@@ -6,149 +6,15 @@ using huqiang.Data;
 
 namespace huqiang.UIModel
 {
-    public class ScrollItem
-    {
-        public int index = -1;
-        public GameObject target;
-        public object datacontext;
-        public object obj;
-    }
-    public class GridScroll:ModelInital
+    public class GridScroll:ScrollContent
     {
         public GridScroll()
         {
-            Items = new List<ScrollItem>();
-            Buff = new List<ScrollItem>();
+          
         }
-        /// <summary>
-        /// 滚动方式
-        /// </summary>
-        public ScrollType scrollType;
         ModelElement model;
-        /// <summary>
-        /// Item的ui模型
-        /// </summary>
-        public ModelElement ItemMod
-        {
-            set
-            {
-                model = value;
-                var c = Items.Count;
-                if (c > 0)
-                {
-                    for (int i = 0; i < Items.Count; i++)
-                        ModelManagerUI.RecycleGameObject(Items[i].target);
-                    Items.Clear();
-                }
-               c = Buff.Count;
-                if (c > 0)
-                {
-                    for (int i = 0; i < Items.Count; i++)
-                        ModelManagerUI.RecycleGameObject(Buff[i].target);
-                    Buff.Clear();
-                }
-            }
-            get { return model; }
-        }
-        /// <summary>
-        /// 视口组件
-        /// </summary>
-        public RectTransform View;
-        IList dataList;
-        Array array;
-        FakeArray fakeStruct;
-        /// <summary>
-        /// 数据绑定类型包含 IList,Array,FakeArray
-        /// </summary>
-        public object BindingData { get {
-                if (dataList != null)
-                    return dataList;
-                if (array != null)
-                    return array;
-                return fakeStruct;
-            } set {
-                if(value is IList)
-                {
-                    dataList = value as IList;
-                    array = null;
-                    fakeStruct = null;
-                }
-                else if(value is Array)
-                {
-                    dataList = null;
-                    array = value as Array;
-                    fakeStruct = null;
-                }
-                else if(value is FakeArray)
-                {
-                    dataList = null;
-                    array = null;
-                    fakeStruct = value as FakeArray;
-                }
-            } }
-        int DataLenth()
-        {
-            if (dataList != null)
-                return dataList.Count;
-            if (array != null)
-                return array.Length;
-            if (fakeStruct != null)
-                return fakeStruct.Length;
-            return 0;
-        }
-        object GetData(int index)
-        {
-            if (dataList != null)
-                return dataList[index];
-            if (array != null)
-                return array.GetValue(index);
-            return null;
-        }
-        /// <summary>
-        /// 所有激活的条目
-        /// </summary>
-        public List<ScrollItem> Items;
-        List<ScrollItem> Buff;
-        /// <summary>
-        /// 每项条目的尺寸
-        /// </summary>
-        public Vector2 ItemSize;
-        /// <summary>
-        /// 要生成的条目类结构
-        /// </summary>
-        public Type ItemObject=typeof(GameObject);
         public int Column = 1;
         public int Row = 0;
-        /// <summary>
-        /// 如果使用热更新,无法使用反射,使用此委托,在热更新中进行反射
-        /// </summary>
-        public Action<ScrollItem, GameObject> Reflection;
-        ScrollItem CreateItem()
-        {
-            object obj = null;
-            if (ItemObject != typeof(GameObject))
-                obj = Activator.CreateInstance(ItemObject);
-            GameObject g = ModelManagerUI.LoadToGame(model, obj, null, "");
-            var t = g.transform;
-            t.SetParent(View);
-            t.localPosition = new Vector3(10000, 10000);
-            t.localScale = Vector3.one;
-            t.localEulerAngles = Vector3.zero;
-            ScrollItem a = new ScrollItem();
-            a.target = g;
-            a.obj = obj;
-            if (Reflection != null)
-                Reflection(a,a.target);
-            return a;
-        }
-        /// <summary>
-        /// scrollView的尺寸
-        /// </summary>
-        public Vector2 Size;
-        /// <summary>
-        /// Content的尺寸,由计算后所得
-        /// </summary>
-        public Vector2 ActualSize;
         /// <summary>
         /// 当前滚动的位置
         /// </summary>
@@ -167,32 +33,32 @@ namespace huqiang.UIModel
         public Action<GridScroll> ScrollEnd;
         void Calcul()
         {
-            Size = View.sizeDelta;
+            Size = ScrollView.sizeDelta;
             if (BindingData==null)
             {
                 Row = 0;
                 return;
             }
-            int c = DataLenth();
+            int c = DataLength;
             Row = c / Column;
             if (c % Column > 0)
                 Row++;
-            ActualSize.x = Column * ItemSize.x;
-            ActualSize.y = Row * ItemSize.y;
+            ActualSize = new Vector2(Column * ItemSize.x, Row * ItemSize.y);
         }
         public override void Initial(RectTransform rect, ModelElement model)
         {
-            View = rect;
+            base.Initial(rect,model);
             eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
             eventCall.Scrolling = Scrolling;
             eventCall.ForceEvent = true;
-            Size = View.sizeDelta;
-            View.anchorMin = View.anchorMax = View.pivot = ScrollContent.Center;
+            Size = ScrollView.sizeDelta;
+            ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = ScrollContent.Center;
             eventCall.CutRect = true;
             eventCall.ScrollEndX = OnScrollEndX;
             eventCall.ScrollEndY = OnScrollEndY;
+            
             if (model != null)
             {
                 ItemMod = model.FindChild("Item");
@@ -202,13 +68,24 @@ namespace huqiang.UIModel
         }
         void Scrolling(EventCallBack back, Vector2 v)
         {
-            if (View == null)
+            if (ScrollView == null)
                 return;
             if (BindingData == null)
                 return;
             v.x /= -eventCall.Target.localScale.x;
             v.y /= eventCall.Target.localScale.y;
-            v = Limit(back, v);
+            switch (scrollType)
+            {
+                case ScrollType.None:
+                    v = ScrollNone(back, ref v, ref Position.x, ref Position.y);
+                    break;
+                case ScrollType.Loop:
+                    v = ScrollLoop(back, ref v, ref Position.x, ref Position.y);
+                    break;
+                case ScrollType.BounceBack:
+                    v = BounceBack(back, ref v, ref Position.x, ref Position.y);
+                    break;
+            }
             Order();
             if (v != Vector2.zero)
             {
@@ -257,29 +134,27 @@ namespace huqiang.UIModel
         void RecycleOutside(float left,float right,float down,float top)
         {
             int c = Items.Count - 1;
-            for(;c>=0;c--)
+            for (; c >= 0; c--)
             {
                 var it = Items[c];
                 int index = Items[c].index;
                 int r = index / Column;
-                float y=(r+1)* ItemSize.y;
-                if(y<down |y>top)
+                float y = (r + 1) * ItemSize.y;
+                if (y < down | y > top)
                 {
                     Items.RemoveAt(c);
-                    it.target.SetActive(false);
-                    Buff.Add(it);
+                    RecycleItem(it);
                     if (ItemRecycle != null)
                         ItemRecycle(it);
                 }
                 else
                 {
                     int col = index % Column;
-                    float x = (col +1)* ItemSize.x;
-                    if(x<left|x>right)
+                    float x = (col + 1) * ItemSize.x;
+                    if (x < left | x > right)
                     {
                         Items.RemoveAt(c);
-                        it.target.SetActive(false);
-                        Buff.Add(it);
+                        RecycleItem(it);
                         if (ItemRecycle != null)
                             ItemRecycle(it);
                     }
@@ -290,7 +165,7 @@ namespace huqiang.UIModel
         {
             int index = row * Column + colStart;
             int len = colEnd - colStart;
-            int cou = DataLenth();
+            int cou = DataLength;
             for (int i = 0; i < len; i++)
             {
                 if (index >= cou)
@@ -299,14 +174,6 @@ namespace huqiang.UIModel
                 index++;
             }
         }
-        /// <summary>
-        /// 更新当前激活的条目
-        /// </summary>
-        public Action<object, object, int> ItemUpdate;
-        /// <summary>
-        /// 回收当前隐藏的条目
-        /// </summary>
-        public Action<ScrollItem> ItemRecycle;
         void UpdateItem(int index,bool force)
         {
             for (int i = 0; i < Items.Count; i++)
@@ -316,28 +183,16 @@ namespace huqiang.UIModel
                 {
                     SetItemPostion(item);
                     if(force)
-                        if (ItemUpdate != null)
                             ItemUpdate(item.obj, item.datacontext, index);
                     return;
                 }
             }
-            ScrollItem it;
-            if (Buff.Count>0)
-            {
-                it = Buff[0];
-                it.target.SetActive(true);
-                Buff.RemoveAt(0);
-            }
-            else
-            {
-                it = CreateItem();
-            }
+            var it = CreateItem();
             Items.Add(it);
             it.index = index;
             it.datacontext = GetData(index);//dataList[index];
             SetItemPostion(it);
-            if (ItemUpdate != null)
-                ItemUpdate(it.obj,it.datacontext,index);
+            ItemUpdate(it.obj, it.datacontext, index);
         }
         void SetItemPostion(ScrollItem item)
         {
@@ -368,98 +223,6 @@ namespace huqiang.UIModel
         {
             Calcul();
             Order(true);
-        }
-        protected Vector2 Limit(EventCallBack callBack, Vector2 v)
-        {
-            Vector2 v2 = Vector2.zero;
-            var size = Size;
-            switch (scrollType)
-            {
-                case ScrollType.None:
-                    float vx = Position.x + v.x;
-                    if (vx < 0)
-                    {
-                        Position.x = 0;
-                        eventCall.VelocityX = 0;
-                        v.x = 0;
-                    }
-                    else if (vx + size.x > ActualSize.x)
-                    {
-                        Position.x = ActualSize.x - size.x;
-                        eventCall.VelocityX = 0;
-                        v.x = 0;
-                    }
-                    else
-                    {
-                        Position.x += v.x;
-                        v2.x = v.x;
-                    }
-                    float vy = Position.y + v.y;
-                    if (vy < 0)
-                    {
-                        Position.y = 0;
-                        eventCall.VelocityY = 0;
-                        v.y = 0;
-                    }
-                    else if (vy + size.y > ActualSize.y)
-                    {
-                        Position.y = ActualSize.y - size.y;
-                        eventCall.VelocityY = 0;
-                        v.y = 0;
-                    }else
-                    {
-                        Position.y += v.y;
-                        v2.y = v.y;
-                    }
-                    break;
-                case ScrollType.BounceBack:
-                    Position += v;
-                    if (!callBack.Pressed)
-                    {
-                        if (Position.x < 0)
-                        {
-                            if (v.x < 0)
-                                if (eventCall.DecayRateX >= 0.99f)
-                                {
-                                    eventCall.DecayRateX = 0.9f;
-                                    eventCall.VelocityX = eventCall.VelocityX;
-                                }
-                        }
-                        else if (Position.x + size.x > ActualSize.x)
-                        {
-                            if (v.x > 0)
-                            {
-                                if (eventCall.DecayRateX >= 0.99f)
-                                {
-                                    eventCall.DecayRateX = 0.9f;
-                                    eventCall.VelocityX = eventCall.VelocityX;
-                                }
-                            }
-                        }
-                        if (Position.y< 0)
-                        {
-                            if (v.y < 0)
-                                if (eventCall.DecayRateY >= 0.99f)
-                                {
-                                    eventCall.DecayRateY = 0.9f;
-                                    eventCall.VelocityY = eventCall.VelocityY;
-                                }
-                        }
-                        else if (Position.y + size.y > ActualSize.y)
-                        {
-                            if (v.y > 0)
-                            {
-                                if (eventCall.DecayRateY >= 0.99f)
-                                {
-                                    eventCall.DecayRateY = 0.9f;
-                                    eventCall.VelocityY = eventCall.VelocityY;
-                                }
-                            }
-                        }
-                    }
-                    return v;
-            }
-            return v2;
         }
         void OnScrollEndX(EventCallBack back)
         {

@@ -54,7 +54,7 @@ namespace huqiang
             view.scroll.DataLength = EmojiMap.Length;
             view.scroll.ItemObject = typeof(ScrollItem);
             view.scroll.ItemSize = new Vector2(108,108);
-            view.scroll.ItemUpdate = ItemUpdate;
+            //view.scroll.ItemUpdate = ItemUpdate;
             view.scroll.Refresh();
             view.cancel.Click = (o, e) => { ModelManagerUI.RecycleGameObject(model.Main); };
         }

@@ -66,7 +66,7 @@ namespace huqiang.UIModel
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = Center;
             eventCall.CutRect = true;
             Model = model;
-            SetItemModel(0);
+            //SetItemModel(0);
         }
         void Draging(EventCallBack back, UserAction action, Vector2 v)
         {
@@ -78,7 +78,22 @@ namespace huqiang.UIModel
             if (ScrollView == null)
                 return;
             v.x /= eventCall.Target.localScale.x;
-            float x = Limit(back, v.x);
+            back.VelocityY = 0;
+            v.y = 0;
+            float x = 0;
+            float y = 0;
+            switch (scrollType)
+            {
+                case ScrollType.None:
+                    x = ScrollNone(back, ref v, ref m_point, ref y).x;
+                    break;
+                case ScrollType.Loop:
+                    x = ScrollLoop(back, ref v, ref m_point, ref y).x;
+                    break;
+                case ScrollType.BounceBack:
+                    x = BounceBack(back, ref v, ref m_point, ref y).x;
+                    break;
+            }
             Order();
             if (x != 0)
             {
@@ -249,17 +264,13 @@ namespace huqiang.UIModel
             float oy = Size.y * 0.5f- (index % Row) * ItemSize.y - ItemSize.y * 0.5f + ItemOffset.y;
             var a = PopItem(index);
             a.target.transform.localPosition = new Vector3(dx, oy, 0);
+            Items.Add(a);
             if (a.index < 0 | force)
             {
                 var dat = GetData(index);
                 a.datacontext = dat;
                 a.index = index;
-                if (ItemUpdate != null)
-                {
-                    if (a.obj == null)
-                        ItemUpdate(a.target, dat, index);
-                    else ItemUpdate(a.obj, dat, index);
-                }
+                ItemUpdate(a.obj, dat, index);
             }
         }
         public void SetSize(Vector2 size)
@@ -267,68 +278,6 @@ namespace huqiang.UIModel
             Size = size;
             ScrollView.sizeDelta = size;
             Refresh();
-        }
-        protected float Limit(EventCallBack callBack, float x)
-        {
-            var size = Size;
-            switch (scrollType)
-            {
-                case ScrollType.None:
-                    float vx = m_point - x;
-                    if (vx < 0)
-                    {
-                        m_point = 0;
-                        eventCall.VelocityX = 0;
-                        if (ScrollToLeft != null)
-                            ScrollToLeft(this);
-                        return 0;
-                    }
-                    else if (vx + size.x > ActualSize.x)
-                    {
-                        m_point = ActualSize.x - size.x;
-                        eventCall.VelocityX = 0;
-                        if (ScrollToRight != null)
-                            ScrollToRight(this);
-                        return 0;
-                    }
-                    m_point -= x;
-                    break;
-                case ScrollType.Loop:
-                    m_point -= x;
-                    float ax = ActualSize.x;
-                    if (m_point < 0)
-                        m_point += ax;
-                    else if (m_point > ax)
-                        m_point %= ax;
-                    break;
-                case ScrollType.BounceBack:
-                    m_point -= x;
-                    if (!callBack.Pressed)
-                    {
-                        if (m_point < 0)
-                        {
-                            if (x > 0)
-                                if (eventCall.DecayRateX >= 0.99f)
-                                {
-                                    eventCall.DecayRateX = 0.9f;
-                                    eventCall.VelocityX = eventCall.VelocityX;
-                                }
-                        }
-                        else if (m_point + size.x > ActualSize.x)
-                        {
-                            if (x < 0)
-                            {
-                                if (eventCall.DecayRateX >= 0.99f)
-                                {
-                                    eventCall.DecayRateX = 0.9f;
-                                    eventCall.VelocityX = eventCall.VelocityX;
-                                }
-                            }
-                        }
-                    }
-                    break;
-            }
-            return x;
         }
     }
 }

@@ -133,7 +133,22 @@ namespace huqiang.UIModel
             if (ScrollView == null)
                 return;
             v.y /= eventCall.Target.localScale.y;
-            float y = Limit(back, v.y);
+            back.VelocityX = 0;
+            v.x = 0;
+            float x = 0;
+            float y = 0;
+            switch (scrollType)
+            {
+                case ScrollType.None:
+                    y = ScrollNone(back, ref v, ref x, ref m_point).y;
+                    break;
+                case ScrollType.Loop:
+                    y = ScrollLoop(back, ref v, ref x, ref m_point).y;
+                    break;
+                case ScrollType.BounceBack:
+                    y = BounceBack(back, ref v, ref x, ref m_point).y;
+                    break;
+            }
             Order();
             if (y != 0)
             {
@@ -298,17 +313,13 @@ namespace huqiang.UIModel
             float ox = (index%Column) * ItemSize.x + ItemSize.x * 0.5f + ItemOffset.x - Size.x * 0.5f;
             var a = PopItem(index);
             a.target.transform.localPosition = new Vector3(ox, dy, 0);
+            Items.Add(a);
             if(a.index<0 | force)
             {
                 var dat = GetData(index);
                 a.datacontext = dat;
                 a.index = index;
-                if (ItemUpdate != null)
-                {
-                    if (a.obj == null)
-                        ItemUpdate(a.target, dat, index);
-                    else ItemUpdate(a.obj, dat, index);
-                }
+                ItemUpdate(a.obj, dat, index);
             }
         }
         public void SetSize(Vector2 size)
@@ -316,74 +327,6 @@ namespace huqiang.UIModel
             Size = size;
             ScrollView.sizeDelta = size;
             Refresh();
-        }
-        protected float Limit(EventCallBack callBack, float y)
-        {
-            var size = Size;
-            switch (scrollType)
-            {
-                case ScrollType.None:
-                    if (y == 0)
-                        return 0;
-                    float vy = m_point + y;
-                    if (vy < 0)
-                    {
-                        m_point = 0;
-                        eventCall.VelocityY = 0;
-                        if (ScrollToTop != null)
-                            ScrollToTop(this);
-                        return 0;
-                    }
-                    else if (vy + size.y > ActualSize.y)
-                    {
-                        m_point = ActualSize.y - size.y;
-                        eventCall.VelocityY = 0;
-                        if (ScrollToDown != null)
-                            ScrollToDown(this);
-                        return 0;
-                    }
-                    m_point += y;
-                    break;
-                case ScrollType.Loop:
-                    if (y == 0)
-                        return 0;
-                    m_point += y;
-                    float ay = ActualSize.y;
-                    if (m_point < 0)
-                        m_point += ay;
-                    else if (m_point > ay)
-                        m_point %= ay;
-                    break;
-                case ScrollType.BounceBack:
-                    m_point += y;
-                    if (!callBack.Pressed)
-                    {
-                        if (m_point < 0)
-                        {
-                            if (y < 0)
-                            {
-                                if (eventCall.DecayRateY >= 0.99f)
-                                {
-                                    eventCall.DecayRateY = 0.9f;
-                                    eventCall.VelocityY = eventCall.VelocityY;
-                                }
-                            }
-                        }
-                        else if (m_point + size.y > ActualSize.y)
-                        {
-                            if (y > 0)
-                            {
-                                if (eventCall.DecayRateY >= 0.99f)
-                                {
-                                    eventCall.DecayRateY = 0.9f;
-                                    eventCall.VelocityY = eventCall.VelocityY;
-                                }
-                            }
-                        }
-                    }
-                    break;
-            }
-            return y;
         }
     }
 }
