@@ -102,47 +102,6 @@ namespace huqiang
                 raw.SetNativeSize();
             }
         }
-        public static T Clone<T>(this T obj) where T : class, new()
-        {
-            if (obj != null)
-            {
-                try
-                {
-                    Type type = obj.GetType();
-                    var tmp = Activator.CreateInstance(type);
-                    var fields = type.GetFields();
-                    if (fields != null)
-                    {
-                        for (int i = 0; i < fields.Length; i++)
-                        {
-                            var f = fields[i];
-                            var ft = f.FieldType;
-                            if (ft.IsClass)
-                            {
-                                if (ft == typeof(string))
-                                {
-                                    f.SetValue(tmp, f.GetValue(obj));
-                                }
-                                else
-                                {
-                                    f.SetValue(tmp, f.GetValue(obj).Clone());
-                                }
-                            }
-                            else
-                            {
-                                f.SetValue(tmp, f.GetValue(obj));
-                            }
-                        }
-                    }
-                    return tmp as T;
-                }
-                catch (Exception ex)
-                {
-                    Debug.Log(ex.StackTrace);
-                }
-            }
-            return null;
-        }
         public static void WriteString(this Stream stream, string str)
         {
             if (str == null)
@@ -187,6 +146,15 @@ namespace huqiang
             float sx = v.x * v.x + v.y * v.y;
             float r = Mathf.Sqrt(len * len / sx);
             return new Vector2(v.x * r, v.y * r);
+        }
+        public static Vector2 Rotate(this Vector2 v, float angle)
+        {
+            var a = MathH.atan(v.x, v.y);
+            a += angle;
+            a %= 360;
+            if (a < 0)
+                a += 360;
+            return MathH.Tan2(a);
         }
         public static Vector3 Move(this Vector3 v, float len)
         {
