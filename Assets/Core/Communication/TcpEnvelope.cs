@@ -7,48 +7,23 @@ namespace huqiang
     public struct EnvelopeItem
     {
         public EnvelopeHead head;
-        public Int32 part;
-        public Int32 rcvLen;
+        public UInt32 part;
+        public UInt32 rcvLen;
         public byte[] buff;
         public long time;
         public Int32[] checks;
     }
     public class TcpEnvelope
     {
-        public static Int16 MinID = 22000;
-        public static Int16 MaxID = 32000;
-        static bool SetChecked(Int32[] checks, int part)
-        {
-            int c = part / 32;
-            int r = part % 32;
-            int o = 1 << r;
-            int v = checks[c];
-            if ((v & o) > 0)
-                return false;
-            v |= o;
-            checks[c] = v;
-            return true;
-        }
-        public static void CopyToBuff(byte[] buff, byte[] src, int start, EnvelopeHead head, int FragmentSize)
-        {
-            int index = head.CurPart * FragmentSize;
-            int len = (int)head.PartLen;
-            int all = buff.Length;
-            for (int i = 0; i < len; i++)
-            {
-                if (index >= all)
-                    break;
-                buff[index] = src[start];
-                index++;
-                start++;
-            }
-        }
+        public static UInt16 MinID = 22000;
+        public static UInt16 MaxID = 32000;
+
         public PackType type = PackType.All;
         protected EnvelopeItem[] pool = new EnvelopeItem[128];
         protected int remain = 0;
         protected byte[] buffer;
-        protected Int16 id = 22000;
-        protected Int16 Fragment = 1460;
+        protected UInt16 id = 22000;
+        protected UInt16 Fragment = 1460;
         /// <summary>
         /// Solution Slices Segment
         /// </summary>
@@ -64,25 +39,33 @@ namespace huqiang
         public virtual byte[][] Pack(byte[] dat, byte tag)
         {
             var all = Envelope.Pack(dat, tag, type, id, Fragment);
-            id += (Int16)all.Length;
+            id += (UInt16)all.Length;
             if (id >= MaxID)
                 id = MinID;
             return all;
         }
         public virtual List<EnvelopeData> Unpack(byte[] dat, int len)
         {
-            ClearTimeout();
-            switch (type)
+            try
             {
-                case PackType.Part:
-                    return OrganizeSubVolume(Envelope.UnpackPart(dat, len, buffer, ref remain, Fragment), Fragment - 16);
-                case PackType.Total:
-                    return Envelope.UnpackInt(dat, len, buffer, ref remain);
-                case PackType.All:
-                    var list = Envelope.UnpackInt(dat, len, buffer, ref remain);
-                    return OrganizeSubVolume(Envelope.EnvlopeDataToPart(list), sss);
+                ClearTimeout();
+                switch (type)
+                {
+                    case PackType.Part:
+                        return OrganizeSubVolume(Envelope.UnpackPart(dat, len, buffer, ref remain, Fragment), Fragment - 16);
+                    case PackType.Total:
+                        return Envelope.UnpackInt(dat, len, buffer, ref remain);
+                    case PackType.All:
+                        var list = Envelope.UnpackInt(dat, len, buffer, ref remain);
+                        return OrganizeSubVolume(Envelope.EnvlopeDataToPart(list), sss);
+                }
+                return null;
             }
-            return null;
+            catch
+            {
+                remain = 0;
+                return null;
+            }
         }
         protected List<EnvelopeData> OrganizeSubVolume(List<EnvelopePart> list, int fs)
         {
@@ -105,9 +88,9 @@ namespace huqiang
                             }
                             if (item.head.MsgID == pool[i].head.MsgID)
                             {
-                                if (SetChecked(pool[i].checks, item.head.CurPart))
+                                if (Envelope.SetChecked(pool[i].checks, item.head.CurPart))
                                 {
-                                    CopyToBuff(pool[i].buff, item.data, 0, item.head, fs);
+                                    Envelope.CopyToBuff(pool[i].buff, item.data, 0, item.head, fs);
                                     pool[i].part++;
                                     pool[i].rcvLen += item.head.PartLen;
                                     if (pool[i].rcvLen >= item.head.Lenth)
@@ -127,7 +110,7 @@ namespace huqiang
                         pool[s].rcvLen = item.head.PartLen;
                         pool[s].buff = new byte[item.head.Lenth];
                         pool[s].time = DateTime.Now.Ticks;
-                        CopyToBuff(pool[s].buff, item.data, 0, item.head, fs);
+                        Envelope.CopyToBuff(pool[s].buff, item.data, 0, item.head, fs);
                         int c = ap / 32 + 1;
                         pool[s].checks = new Int32[c];
                     }
@@ -162,8 +145,12 @@ namespace huqiang
                 pool[i].head.MsgID = 0;
             }
         }
+        ~TcpEnvelope()
+        {
+            Clear();
+        }
     }
-    public class UdpEnvelope:TcpEnvelope
+    public class UdpEnvelope : TcpEnvelope
     {
         public UdpEnvelope()
         {

@@ -17,19 +17,15 @@ namespace huqiang
             {
                 if (m_Caret == null)
                 {
-                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
-                    g.name = "m_caret";
+                    var g = new GameObject("m_caret",typeof(CustomRawImage));
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
-                    m_Caret.material = new Material(Shader.Find("Custom/UIDef"));
                 }
                 else if (m_Caret.name == "buff")
                 {
-                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
-                    g.name = "m_caret";
+                    var g = new GameObject("m_caret", typeof(CustomRawImage));
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
-                    m_Caret.material = new Material(Shader.Find("Custom/UIDef"));
                 }
                 return m_Caret;
             }

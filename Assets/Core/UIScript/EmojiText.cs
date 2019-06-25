@@ -9,8 +9,10 @@ namespace UGUI
 {
     public class EmojiText:Text
     {
+        public static Shader shader;
         public static Texture Emoji;
         public static float NormalDpi = 96;
+
         public Action<EmojiText, VertexHelper> OnPopulate;
         List<EmojiInfo> list = new List<EmojiInfo>();
         readonly UIVertex[] m_TempVerts = new UIVertex[4];

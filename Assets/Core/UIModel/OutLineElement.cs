@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +38,7 @@ namespace huqiang.UIModel
             a.effectColor = dat.effectColor;
             a.effectDistance = dat.effectDistance;
             a.useGraphicAlpha = dat.useGraphicAlpha;
+            a.enabled = true;
         }
         public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
         {

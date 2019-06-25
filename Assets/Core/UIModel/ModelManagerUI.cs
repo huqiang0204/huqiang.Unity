@@ -1,54 +1,17 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
-using huqiang.Pool;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using UGUI;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace huqiang.UIModel
 {
-    public class ReflectionModel
-    {
-        public string FieldName;
-        public string TargetName;
-        public Type FieldType;
-        public object Value;
-    }
-    public abstract class ModelInital
-    {
-        public virtual void Initial(RectTransform rect, ModelElement mod) { }
-    }
-    public class ComponentType
-    {
-        public long None = 0;
-        public long RectTransform = 0x1;
-        public long Image = 0x2;//4
-        public long RawImage = 0x4;//8
-        public long CustomRawImage = 0x8;//16
-        public long Text = 0x10;//32
-        public long Mask = 0x20;//64
-        public long TextEx = 0x40;//128
-    }
-    public class PrefabAsset
-    {
-        public string name;
-        public ModelElement models;
-    }
     public class ModelManagerUI
     {
-        struct TypeContext
-        {
-            public Type type;
-            public Func<Component, bool> Compare;
-            public Func<DataConversion> CreateConversion;
-            public Func<Component, DataBuffer, FakeStruct> LoadFromObject;
-        }
         static int point;
         /// <summary>
         /// 0-62,第63为负数位
@@ -61,22 +24,18 @@ namespace huqiang.UIModel
         /// <param name="Compare">不可空</param>
         /// <param name="create">可空</param>
         /// <param name="load">可空</param>
-        public static void RegComponent(Type type, Func<Component, bool> Compare, Func<DataConversion> create, Func<Component, DataBuffer, FakeStruct> load)
+        public static void RegComponent(TypeContext context)
         {
             if (point >= 63)
                 return;
+            var name = context.name;
             for (int i = 0; i < point; i++)
-                if (types[i].type == type)
+                if (types[i].name == name)
                 {
-                    types[i].Compare = Compare;
-                    types[i].CreateConversion = create;
-                    types[i].LoadFromObject = load;
+                    types[i] = context;
                     return;
                 }
-            types[point].type = type;
-            types[point].Compare = Compare;
-            types[point].CreateConversion = create;
-            types[point].LoadFromObject = load;
+            types[point] = context;
             point++;
         }
         public static Int64 GetTypeIndex(Component com)
@@ -104,80 +63,12 @@ namespace huqiang.UIModel
             }
             return a;
         }
-        static int GetTypeIndex(Type type)
-        {
-            for (int i = 0; i < point; i++)
-            {
-                if (type == types[i].type)
-                {
-                    int a = 1 << i;
-                    return a;
-                }
-            }
-            return 0;
-        }
-        /// <summary>
-        /// 根据所有类型生成一个id
-        /// </summary>
-        /// <param name="typ"></param>
-        /// <returns></returns>
-        public static int GetTypeIndex(Type[] typ)
-        {
-            if (typ == null)
-                return 0;
-            int a = 0;
-            for (int i = 0; i < typ.Length; i++)
-                a |= GetTypeIndex(typ[i]);
-            return a;
-        }
-
-        public static void InitialComponent()
-        {
-            RegComponent(typeof(RectTransform), (o) => { return o is RectTransform; }, () => { return new ModelElement(); }, ModelElement.LoadFromObject);
-            RegComponent(typeof(Image), (o) => { return o is Image; }, () => { return new ImageElement(); }, ImageElement.LoadFromObject);
-            RegComponent(typeof(EmojiText), (o) => { return o is EmojiText; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
-            RegComponent(typeof(Text), (o) => { return o is Text; }, () => { return new TextElement(); }, TextElement.LoadFromObject);
-            RegComponent(typeof(CustomRawImage), (o) => { return o is CustomRawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
-            RegComponent(typeof(RawImage), (o) => { return o is RawImage; }, () => { return new RawImageElement(); }, RawImageElement.LoadFromObject);
-            RegComponent(typeof(Mask), (o) => { return o is Mask; }, () => { return new MaskElement(); }, MaskElement.LoadFromObject);
-            RegComponent(typeof(Outline), (o) => { return o is Outline; }, () => { return new OutLineElement(); }, OutLineElement.LoadFromObject);
-        }
-        public static void InitialModel()
-        {
-            RegModel(null, 32, typeof(RectTransform));
-            RegModel(null, 32, typeof(RectTransform), typeof(Text));
-            RegModel(null, 32, typeof(RectTransform), typeof(Image));
-            RegModel(null, 32, typeof(RectTransform), typeof(RawImage));
-            RegModel(null, 32, typeof(RectTransform), typeof(CustomRawImage));
-            RegModel(null, 32, typeof(RectTransform), typeof(Image), typeof(Mask));
-            RegModel(null, 32, typeof(RectTransform), typeof(EmojiText));
-            RegModel(null, 32, typeof(RectTransform), typeof(Text), typeof(Outline));
-        }
         static List<ModelBuffer> models = new List<ModelBuffer>();
-        /// <summary>
-        /// 注册一种模型的管理池
-        /// </summary>
-        /// <param name="reset">模型被重复利用时,进行重置,为空则不重置</param>
-        /// <param name="buffsize">池子大小,建议32</param>
-        /// <param name="types">所有的Component组件</param>
-        public static void RegModel(Action<GameObject> reset, int buffsize, params Type[] types)
-        {
-            int typ = GetTypeIndex(types);
-            for (int i = 0; i < models.Count; i++)
-            {
-                if (typ == models[i].type)
-                    return;
-            }
-            ModelBuffer model = new ModelBuffer(typ, buffsize, reset, types);
-            models.Add(model);
-        }
         public static DataConversion Load(int type)
         {
             if (type < 0 | type >= point)
                 return null;
-            if (types[type].CreateConversion != null)
-                return types[type].CreateConversion();
-            return null;
+           return types[type].Create();
         }
         public static FakeStruct LoadFromObject(Component com, DataBuffer buffer, ref Int16 type)
         {
@@ -185,8 +76,8 @@ namespace huqiang.UIModel
                 if (types[i].Compare(com))
                 {
                     type = (Int16)i;
-                    if (types[i].LoadFromObject != null)
-                        return types[i].LoadFromObject(com, buffer);
+                    if (types[i].Load != null)
+                        return types[i].Load(com, buffer);
                     return null;
                 }
             return null;
@@ -202,7 +93,13 @@ namespace huqiang.UIModel
             db.fakeStruct = ModelElement.LoadFromObject(uiRoot.transform, db);
             File.WriteAllBytes(path, db.ToBytes());
         }
-        static List<PrefabAsset> prefabs = new List<PrefabAsset>();
+        public static List<PrefabAsset> prefabs = new List<PrefabAsset>();
+        /// <summary>
+        /// 载入模型数据
+        /// </summary>
+        /// <param name="buff"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public unsafe static PrefabAsset LoadModels(byte[] buff, string name)
         {
             DataBuffer db = new DataBuffer(buff);
@@ -245,6 +142,44 @@ namespace huqiang.UIModel
             }
             return null;
         }
+        static Container<InstanceContext> container = new Container<InstanceContext>(4096);
+        static ModelBuffer CreateModelBuffer(Int64 type, Int32 size = 32)
+        {
+            long t = type;
+            List<Type> tmp = new List<Type>();
+            for (int i = 0; i < 64; i++)
+            {
+                if (t > 0)
+                {
+                    if ((t & 1) > 0)
+                    {
+                        tmp.Add(types[i].type);
+                    }
+                    t>>= 1;
+                }
+                else break;
+            }
+            ModelBuffer model = new ModelBuffer(type, size, tmp.ToArray(),container);
+            models.Add(model);
+            return model;
+        }
+        public static GameObject CreateNew(Int64 type)
+        {
+            if (type == 0)
+                return null;
+            for (int i = 0; i < models.Count; i++)
+                if (type == models[i].type)
+                    return models[i].CreateObject();
+            return CreateModelBuffer(type).CreateObject();
+        }
+        public static ModelElement FindModel(string str)
+        {
+            if (prefabs == null)
+                return null;
+            if (prefabs.Count > 0)
+                return prefabs[0].models.FindChild(str);
+            return null;
+        }
         public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "mod")
         {
             if (prefabs == null)
@@ -260,87 +195,40 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter="mod")
-        {
-            if (mod == null)
-            {
-#if DEBUG
-                Debug.Log("Mod is null");
-#endif
-                return null;
-            }
-            if (mod.tag == filter)
-            {
-                return null;
-            }
-            var g = CreateNew(mod.data.type);
-            if (g == null)
-            {
-#if DEBUG
-                Debug.Log("Name:" + mod.name+ " is null");
-#endif
-                return null;
-            }
-            var t = g.transform;
-            if (parent != null)
-                t.SetParent(parent);
-            mod.LoadToObject(t);
-            mod.Main = g;
-            var c = mod.child;
-            for (int i = 0; i < c.Count; i++)
-                LoadToGame(c[i], o, t,filter);
-            if (o != null)
-                GetObject(t, o, mod);
-            return g;
-        }
-        public static GameObject CreateNew(params Type[] types)
-        {
-            return CreateNew(GetTypeIndex(types));
-        }
-        public static GameObject CreateNew(Int64 type)
-        {
-            if (type == 0)
-                return null;
-            for (int i = 0; i < models.Count; i++)
-                if (type == models[i].type)
-                    return models[i].CreateObject();
-            return null;
-        }
-        static void GetObject(Transform t, object o, ModelElement mod)
-        {
-            var m = o.GetType().GetField(t.name);
-            if (m != null)
-            {
-                if (m.FieldType == typeof(GameObject))
-                    m.SetValue(o, t.gameObject);
-                else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
-                    m.SetValue(o, EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType));
-                else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
-                {
-                    var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
-                    obj.Initial(t as RectTransform, mod);
-                    m.SetValue(o, obj);
-                }
-                else if (typeof(Component).IsAssignableFrom(m.FieldType))
-                    m.SetValue(o, t.GetComponent(m.FieldType));
-            }
-        }
-        public static ModelElement FindModel(string str)
-        {
-            if (prefabs == null)
-                return null;
-            if (prefabs.Count > 0)
-                return prefabs[0].models.FindChild(str);
-            return null;
-        }
-        public static void GetComponent(Transform t, object o)
+        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "mod")
         {
             if (o != null)
-                GetObject(t, o, null);
-            for (int i = 0; i < t.childCount; i++)
-                GetComponent(t.GetChild(i), o);
+            {
+                var tmp = ObjectFelds(o);
+                var g = LoadToGameR(mod, tmp, parent, filter);
+                ReflectionModel[] all = tmp.All;
+                for (int i = 0; i < all.Length; i++)
+                    all[i].field.SetValue(o, all[i].Value);
+                return g;
+            }
+            else
+            {
+                return LoadToGameR(mod, null, parent, filter);
+            }
         }
-        public static ModelElement LoadToGameR(string asset, string mod, List<ReflectionModel> reflections, Transform parent, string filter = "mod")
+        public static TempReflection ObjectFelds(object obj)
+        {
+            var fs = obj.GetType().GetFields();
+            TempReflection temp = new TempReflection();
+            temp.Top = fs.Length;
+            ReflectionModel[] reflections = new ReflectionModel[temp.Top];
+            for (int i = 0; i < fs.Length; i++)
+            {
+                ReflectionModel r = new ReflectionModel();
+                r.field = fs[i];
+                r.FieldType = fs[i].FieldType;
+                r.name = fs[i].Name;
+                reflections[i] = r;
+            }
+            temp.All = reflections;
+            return temp;
+        }
+        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent, string filter = "mod")
         {
             if (prefabs == null)
                 return null;
@@ -358,7 +246,7 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static GameObject LoadToGameR(ModelElement mod, List<ReflectionModel> reflections, Transform parent, string filter = "mod")
+        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent, string filter = "mod")
         {
             if (mod == null)
             {
@@ -386,24 +274,23 @@ namespace huqiang.UIModel
                 GetObject(t, reflections, mod);
             return g;
         }
-        public static void GetComponent(Transform t, List<ReflectionModel> reflections)
+        /// <summary>
+        /// 对象反射
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="reflections"></param>
+        /// <param name="mod"></param>
+        static void GetObject(Transform t, TempReflection reflections, ModelElement mod)
         {
-            if (reflections != null)
-                GetObject(t, reflections, null);
-            for (int i = 0; i < t.childCount; i++)
-                GetComponent(t.GetChild(i), reflections);
-        }
-        static void GetObject(Transform t, List<ReflectionModel> reflections, ModelElement mod)
-        {
-            for (int i = 0; i < reflections.Count; i++)
+            for (int i = 0; i < reflections.Top; i++)
             {
-                var m = reflections[i];
-                if (m.TargetName == t.name)
+                var m = reflections.All[i];
+                if (m.name == t.name)
                 {
                     if (m.FieldType == typeof(GameObject))
                         m.Value = t.gameObject;
                     else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
-                        m.Value = EventCallBack.RegEventCallBack(t as RectTransform, m.FieldType);
+                        m.Value = EventCallBack.RegEvent(t as RectTransform, m.FieldType);
                     else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
                     {
                         var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
@@ -412,6 +299,11 @@ namespace huqiang.UIModel
                     }
                     else if (typeof(Component).IsAssignableFrom(m.FieldType))
                         m.Value = t.GetComponent(m.FieldType);
+                    reflections.Top--;
+                    var j = reflections.Top;
+                    var a = reflections.All[j];
+                    reflections.All[i] = a;
+                    reflections.All[j] = m;
                     break;
                 }
             }
@@ -428,37 +320,69 @@ namespace huqiang.UIModel
         {
             if (game == null)
                 return;
-            var rect = game.GetComponent<RectTransform>();
-            if (rect != null)
-                EventCallBack.ReleaseEvent(rect);
-            var ts = game.GetComponents<Component>();
-           long type = GetTypeIndex(ts);
-            if (type > 0)
-            {
-                for (int i = 0; i < models.Count; i++)
-                {
-                    if (models[i].type == type)
-                    {
-                        models[i].ReCycle(game);
-                        break;
-                    }
-                }
-            }
+            int id = game.GetInstanceID();
+            InstanceContext ins = container.Find((o)=> { return o.Id == id; });
+            EventCallBack.ReleaseEvent(game.transform as RectTransform);
+            if(ins!=null)
+                ins.buffer.ReCycle(game);
             var p = game.transform;
             for (int i = p.childCount - 1; i >= 0; i--)
                 RecycleGameObject(p.GetChild(i).gameObject);
-            if (type > 0)
+            if (ins!=null)
                 p.SetParent(CycleBuffer);
             else GameObject.Destroy(game);
-
         }
-        public static void RecycleSonObject(GameObject game)
+    }
+    public class ReflectionModel
+    {
+        public string name;
+        public FieldInfo field;
+        public Type FieldType;
+        public object Value;
+    }
+    public class TempReflection
+    {
+        public int Top;
+        public ReflectionModel[] All;
+    }
+    public abstract class ModelInital
+    {
+        public virtual void Initial(RectTransform rect, ModelElement mod) { }
+    }
+    public class TypeContext
+    {
+        public Type type;
+        public Func<Component, DataBuffer, FakeStruct> Load;
+        public string name;
+        public virtual bool Compare(object obj)
         {
-            if (game == null)
-                return;
-            var p = game.transform;
-            for (int i = p.childCount - 1; i >= 0; i--)
-                RecycleGameObject(p.GetChild(i).gameObject);
+            return false;
         }
+        public virtual DataConversion Create()
+        {
+            return null;
+        }
+    }
+    public class ComponentType<T, U> : TypeContext where T : Component where U : DataConversion, new()
+    {
+        public ComponentType(Func<Component, DataBuffer, FakeStruct> load)
+        {
+            Load = load;
+            type = typeof(T);
+            name = type.Name;
+        }
+        public override bool Compare(object obj)
+        {
+            return obj is T;
+        }
+        public override DataConversion Create()
+        {
+            return new U();
+        }
+    }
+    public class PrefabAsset
+    {
+        public string name;
+        public ModelElement models;
     }
 }

@@ -1,11 +1,7 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using UGUI;
 using UnityEngine;
 
 
@@ -43,6 +39,7 @@ namespace huqiang.UIModel
         /// int16数组
         /// </summary>
         public Int32 child;
+        public Int32 ex;
         public static int Size = sizeof(ElementData);
         public static int ElementSize = Size / 4;
     }
@@ -52,7 +49,6 @@ namespace huqiang.UIModel
         public string name;
         public string tag;
         public ModelElement parent { get; private set; }
-        public StringBuffer buffer;
         public ElementData data;
         public List<DataConversion> components = new List<DataConversion>();
         public List<ModelElement> child = new List<ModelElement>();
@@ -121,7 +117,13 @@ namespace huqiang.UIModel
             trans.pivot = data.pivot;
             trans.sizeDelta = data.sizeDelta;
             trans.name = ui.name;
-            trans.tag = ui.tag;
+            try
+            {
+                trans.tag = ui.tag;
+            }catch(Exception ex)
+            {
+                Debug.LogError(ex.StackTrace);
+            }
         }
         public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
         {
@@ -162,6 +164,10 @@ namespace huqiang.UIModel
                         ed->margin = ss.margin;
                         ed->DesignSize = ss.DesignSize;
                     }
+                    else if (coms[i] is UICompositeHelp)
+                    {
+                        ed->ex = buffer.AddData((coms[i] as UICompositeHelp).ToFakeStruct(buffer));
+                    }
                     else if (!(coms[i] is CanvasRenderer))
                     {
                         Int16 type = 0;
@@ -195,6 +201,13 @@ namespace huqiang.UIModel
             for (int i = 0; i < child.Count; i++)
                 if (child[i].name == name)
                     return child[i];
+            return null;
+        }
+        public T GetComponent<T>()where T:DataConversion
+        {
+            for (int i = 0; i < components.Count; i++)
+                if (components[i] is T)
+                    return components[i] as T;
             return null;
         }
         public GameObject Main;
@@ -376,6 +389,12 @@ namespace huqiang.UIModel
             {
                 ScaleSize(child[i]);
             }
+        }
+        public FakeStruct GetExtand()
+        {
+            if (Model != null)
+                return Model.buffer.GetData(data.ex) as FakeStruct;
+            return null;
         }
     }
 }

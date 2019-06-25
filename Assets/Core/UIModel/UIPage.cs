@@ -56,6 +56,7 @@ public class UIBase
             t.localPosition = Vector3.zero;
             t.localScale = Vector3.one;
         }
+
     }
     public virtual void Dispose() {
         if (main != null)
@@ -80,7 +81,6 @@ public class UIBase
     public virtual void Cmd(string cmd, object dat)
     {
     }
-
     public virtual void Cmd(Int32 cmd,Int32 type, object dat)
     {
     }
@@ -99,12 +99,18 @@ public class UIBase
 }
 public class PopWindow:UIBase
 {
+    protected GameObject mask;
     public Func<bool> Back { get; set; }
     protected Page MainPage;
     public virtual void Initial(Transform parent, Page page, object obj = null) {
         base.Initial(parent,page,obj);
         MainPage = page;
        }
+    //用来初始化弹窗的虚方法
+    public virtual void InitialPop(object obj = null)
+    {
+
+    }
     public virtual void Show(object obj = null) { if (main != null) main.SetActive(true); }
     public virtual void Hide() {
         if (main != null)
@@ -114,10 +120,11 @@ public class PopWindow:UIBase
     {
         return false;
     }
-
 }
 public class Page:UIBase
 {
+
+    //public  PopType _popType = PopType.None;//默认
     class PageInfo
     {
         public Type Pagetype;
@@ -151,6 +158,7 @@ public class Page:UIBase
         t.Initial(Root, dat);
         t.ReSize();
         CurrentPage = t;
+        t.ChangeLanguage();
     }
     public static void LoadPage(Type type, object dat = null)
     {
@@ -171,6 +179,7 @@ public class Page:UIBase
             t.Initial(Root, dat);
             t.ReSize();
             t.Recovery();
+            t.ChangeLanguage();
         }
     }
     public static void Back()
@@ -193,7 +202,7 @@ public class Page:UIBase
         if (CurrentPage != null)
             CurrentPage.Cmd(cmd, obj);
     }
-    public static void UpdateData(Int32 cmd,Int32 type, object obj)
+    public static void UpdateData(Int32 cmd,Int32 type,object obj)
     {
         if (CurrentPage != null)
             CurrentPage.Cmd(cmd,type,obj);
@@ -212,7 +221,8 @@ public class Page:UIBase
     protected Type BackPop;
     protected object BackData;
     protected GameObject mask;
-    public PopWindow currentPop { get; private set; }
+    // public PopWindow currentPop { get; private set; }
+    public PopWindow currentPop { get;  set; }
     public virtual void Initial(Transform parent, object dat = null) {
         Parent = parent;
         DataContext = dat;
@@ -369,11 +379,12 @@ public class Page:UIBase
         PageInfo page = new PageInfo();
         page.Pagetype = GetType();
         if (currentPop != null)
-            if (currentPop.main.activeSelf)
-            {
-                page.PopType = currentPop.GetType();
-                page.PopData = currentPop.DataContext;
-            }
+            if (currentPop.main != null)
+                if (currentPop.main.activeSelf)
+                {
+                    page.PopType = currentPop.GetType();
+                    page.PopData = currentPop.DataContext;
+                }
         page.DataContext = DataContext;
         pages.Push(page);
     }
@@ -381,5 +392,15 @@ public class Page:UIBase
     {
         if (currentPop != null)
             currentPop.Update(time);
+    }
+    public override void ChangeLanguage()
+    {
+        if (pops != null)
+        {
+            for (int i = 0; i < pops.Count; i++)
+            {
+                pops[i].ChangeLanguage();
+            }
+        }
     }
 }

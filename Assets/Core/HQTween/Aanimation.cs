@@ -44,7 +44,7 @@ namespace huqiang
         public void Update()
         {
             Frames++;
-            float timeslice = Time.deltaTime * 1000;
+            float timeslice = UserAction.TimeSlice;
             var tmp = Actions.ToArray();
             for (int i=0; i<tmp.Length; i++)
             {

@@ -316,7 +316,8 @@ namespace huqiang.Data
                 Int16* sp = (Int16*)p;
                 for (int i = 0; i < len; i++)
                 {
-                    buf[i] = *sp; sp++;
+                    buf[i] = *sp;
+                    sp++;
                 }
                 return buf;
             }

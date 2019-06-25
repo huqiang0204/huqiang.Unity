@@ -928,14 +928,14 @@ namespace huqiang
             {
                 if (m_Caret == null)
                 {
-                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
+                    var g = new GameObject("m_caret", typeof(CustomRawImage));
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;
                 }
                 else if (m_Caret.name == "buff")
                 {
-                    var g = ModelManagerUI.CreateNew(typeof(CustomRawImage));
+                    var g = new GameObject("m_caret", typeof(CustomRawImage));
                     g.name = "m_caret";
                     m_Caret = g.GetComponent<CustomRawImage>();
                     m_Caret.rectTransform.sizeDelta = Vector2.zero;

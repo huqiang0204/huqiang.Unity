@@ -18,7 +18,7 @@ namespace huqiang
     }
     public class UdpServer
     {
-        UdpClient soc;
+        Socket soc;
         Thread thread;
         int remotePort;
         Queue<SocData> queue;
@@ -26,9 +26,9 @@ namespace huqiang
         bool running;
         bool auto;
         PackType packType = PackType.All;
-        Int16 id = 10000;
-        static Int16 MinID = 11000;
-        static Int16 MaxID = 21000;
+        UInt16 id = 10000;
+        static UInt16 MinID=11000;
+        static UInt16 MaxID = 21000;
         /// <summary>
         /// UdpServer构造
         /// </summary>
@@ -41,7 +41,10 @@ namespace huqiang
             packType = type;
             remotePort = remote;
             //udp服务器端口绑定
-            soc = new UdpClient(port);
+            IPEndPoint ip = new IPEndPoint(IPAddress.Any, port);
+            soc = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp); //new UdpClient(_port);//new IPEndPoint(IPAddress.Parse(ip),
+            soc.Bind(ip);
+
             running = true;
             auto = subThread;
             links = new List<UdpLink>();
@@ -59,25 +62,25 @@ namespace huqiang
                 case PackType.Part:
                     var all = Envelope.SubVolume(dat, tag, id, 1472);
                     for (int i = 0; i < all.Length; i++)
-                        soc.Send(all[i], all[i].Length, ip);
-                    id += (Int16)all.Length;
+                        soc.SendTo(all[i],  ip);
+                    id+=(UInt16)all.Length;
                     if (id > MaxID)
                         id = MinID;
                     break;
                 case PackType.Total:
                     dat = Envelope.PackingInt(dat, tag);
-                    soc.Send(dat, dat.Length, ip);
+                    soc.SendTo(dat,  ip);
                     break;
                 case PackType.All:
                     all = Envelope.PackAll(dat, tag, id, 1472);//1472-25
                     for (int i = 0; i < all.Length; i++)
-                        soc.Send(all[i], all[i].Length, ip);
-                    id += (Int16)all.Length;
+                        soc.SendTo(all[i],  ip);
+                    id += (UInt16)all.Length;
                     if (id > MaxID)
                         id = MinID;
                     break;
                 default:
-                    soc.Send(dat, dat.Length, ip);
+                    soc.SendTo(dat,  ip);
                     break;
             }
         }
@@ -115,7 +118,7 @@ namespace huqiang
                 {
                     var link = links[i];
                     for (int j = 0; j < dat.Length; j++)
-                        soc.Send(dat[j], dat[j].Length, link.endpPoint);
+                        soc.SendTo(dat[j],  link.endpPoint);
                 }
             }
         }
@@ -125,35 +128,44 @@ namespace huqiang
             {
                 for (int i = 0; i < links.Count; i++)
                 {
-                    soc.Send(dat, dat.Length, links[i].endpPoint);
+                    soc.SendTo(dat,  links[i].endpPoint);
                 }
             }
         }
         void Run()
         {
+            byte[] buffer = new byte[65536];
+            IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
             while (running)
             {
                 try
                 {
-                    IPEndPoint ip = new IPEndPoint(IPAddress.Any, remotePort);
-                    byte[] dat = soc.Receive(ref ip);//接收数据报
-                    var env = FindEnvelope(ip);
-                    if (Packaging)
+                    EndPoint end = ip;
+                    int len = soc.ReceiveFrom(buffer, ref end);//接收数据报
+                    if (len > 0)
                     {
-                        var data = env.envelope.Unpack(dat, dat.Length);
-                        for (int i = 0; i < data.Count; i++)
+                        byte[] dat = new byte[len];
+                        for (int i = 0; i < len; i++)
+                            dat[i] = buffer[i];
+                        var env = FindEnvelope(end as IPEndPoint);
+                        if (Packaging)
                         {
-                            var item = data[i];
-                            EnvelopeCallback(item.data, item.type, env);
+                            var data = env.envelope.Unpack(dat, len);
+                            for (int i = 0; i < data.Count; i++)
+                            {
+                                var item = data[i];
+                                EnvelopeCallback(item.data, item.type, env);
+                            }
                         }
-                    }
-                    else
-                    {
-                        EnvelopeCallback(dat, 0, env);
+                        else
+                        {
+                            EnvelopeCallback(dat, 0, env);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
+                    UnityEngine.Debug.Log(ex.StackTrace);
                 }
             }
         }

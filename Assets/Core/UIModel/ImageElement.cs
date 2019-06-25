@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -50,6 +50,7 @@ namespace huqiang.UIModel
             var a = game.GetComponent<Image>();
             if (a == null)
                 return;
+            a.enabled = true;
             a.alphaHitTestMinimumThreshold = dat.alphaHit;
             a.fillAmount = dat.fillAmount;
             a.fillCenter = dat.fillCenter;

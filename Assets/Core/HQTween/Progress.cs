@@ -1,5 +1,4 @@
-﻿using huqiang.Data;
-using huqiang.UIModel;
+﻿using huqiang.UIModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +19,7 @@ namespace huqiang
             AnimationManage.Manage.ReleaseAnimat(this);
         }
         bool playing = false;
+        public string name;
         AssetBundleCreateRequest abcr;
         public Action<Progress, AssetBundleCreateRequest> PlayOver;
         public Action<Progress, AssetBundleCreateRequest> Schedule;
@@ -39,9 +39,8 @@ namespace huqiang
                     if (abcr.isDone)
                     {
                         playing = false;
-                        var bs = ElementAsset.bundles;
-                        if (!bs.Contains(abcr.assetBundle))
-                            bs.Add(abcr.assetBundle);
+                        var bs = abcr.assetBundle;
+                        ElementAsset.AddBundle(name,bs);
                         AnimationManage.Manage.ReleaseAnimat(this);
                         if (PlayOver != null)
                             PlayOver(this, abcr);

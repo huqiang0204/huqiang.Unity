@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
+using huqiang.Manager2D;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,7 +40,10 @@ namespace huqiang.UIModel
                     return fonts[i];
             }
             if (fonts.Count == 0)
+            {
                 TextElement.fonts.Add(Font.CreateDynamicFontFromOSFont("Arial", 16));
+                //TextElement.fonts.Add(Font.CreateDynamicFontFromOSFont("ArtFont", 16));
+            }
             return fonts[0];
         }
         Text Context;
@@ -65,6 +68,7 @@ namespace huqiang.UIModel
             var a = game.GetComponent<Text>();
             if (a == null)
                 return;
+            a.enabled = true;
             a.alignByGeometry = dat.alignByGeometry;
             a.alignment = dat.alignment;
             a.fontSize = dat.fontSize;

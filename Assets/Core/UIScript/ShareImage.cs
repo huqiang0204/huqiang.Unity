@@ -89,7 +89,7 @@ public class ShareImage
         vertices = new List<UIVertex>();
         tri = new List<int>();
         rawImage = image;
-        callBack = EventCallBack.RegEventCallBack<EventCallBack>(image.rectTransform);
+        callBack = EventCallBack.RegEvent<EventCallBack>(image.rectTransform);
     }
     public void ReCalcul()
     {

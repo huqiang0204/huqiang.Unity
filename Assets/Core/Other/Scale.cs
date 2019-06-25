@@ -75,10 +75,10 @@ public class Scale
     public static Vector2 RightDown = new Vector2(1,0);
     public static Vector2 RightTop = new Vector2(1,1);
 
-    public static float LayoutWidth=720;
-    public static float LayoutHeight = 1280;
-    public static float ScreenWidth=720;
-    public static float ScreenHeight=1280;
+    public static float LayoutWidth=1280;
+    public static float LayoutHeight = 720;
+    public static float ScreenWidth=1280;
+    public static float ScreenHeight=720;
     /// <summary>
     /// 对屏幕进行等比例覆盖
     /// </summary>
@@ -177,7 +177,6 @@ public class Scale
         float h = Screen.height;
 
         return h / w * LayoutWidth;
-     
     }
     /// <summary>
     /// 按屏幕填充，比例会拉伸
@@ -482,7 +481,7 @@ public class Scale
         return h *  LayoutWidth/ ScreenWidth;
     }
     public static float NormalDpi = 96;
-    public static float ScreenScale { get { float dpi = Screen.dpi; return dpi / NormalDpi; } }
+    public static float ScreenScale { get { float dpi = Screen.dpi; return NormalDpi/ dpi ; } }
     public static Vector2 ScreenSize { get {
             float dpi = Screen.dpi;
             float s =  NormalDpi/dpi;

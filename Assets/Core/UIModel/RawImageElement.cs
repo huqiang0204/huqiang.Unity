@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.ModelManager2D;
+using huqiang.Manager2D;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,7 +46,7 @@ namespace huqiang.UIModel
             if (image.shader != "Default UI Material")
                 a.material = new Material(Shader.Find(image.shader));
             if (image.textureName != null)
-                a.texture = ElementAsset.FindTexture(image.assetName, image.textureName);
+                a.texture = ElementAsset.FindResource<Texture>(image.assetName, image.textureName);
             else a.texture = null;
             image.Context = a;
         }

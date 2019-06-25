@@ -6,20 +6,22 @@ using System.Threading.Tasks;
 
 namespace huqiang.Data
 {
-    public class QueueBuffer<T> where T:class
+    public class QueueBuffer<T> where T : class
     {
         int start = 0;
         int end = 0;
         T[] buffer;
         int mlen;
-        public QueueBuffer(int len =2048)
+        public QueueBuffer(int len = 2048)
         {
             buffer = new T[len];
             mlen = len;
         }
         public int BufferLenth { get { return mlen; } }
-        public int Count {
-            get {
+        public int Count
+        {
+            get
+            {
                 int a = end - start;
                 if (a < 0)
                     a += mlen;
@@ -46,6 +48,12 @@ namespace huqiang.Data
                 return t;
             }
             return null;
+        }
+        public void Clear()
+        {
+            start = end;
+            for (int i = 0; i < mlen; i++)
+                buffer[i] = null;
         }
     }
 }

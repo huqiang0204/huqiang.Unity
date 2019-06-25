@@ -1,7 +1,7 @@
-﻿using System;
+﻿using huqiang.Data;
+using huqiang.UIModel;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,8 +36,7 @@ namespace huqiang
                 index = Roots.Count;
             Roots.Insert(index, rect);
         }
-        internal static EventCallBack[] buffer;
-        static int max = 0;
+        internal static Container<EventCallBack> container = new Container<EventCallBack>();
         public Vector3[] Rectangular { get; private set; }
         /// <summary>
         /// 暂停事件
@@ -49,12 +48,6 @@ namespace huqiang
                 return;
             if (Roots == null)
                 return;
-            if (max == 0)
-                return;
-            //#if DEBUG
-            //            try
-            //            {
-            //#endif
             if (Roots != null)
                 for (int j = 0; j < Roots.Count; j++)
                 {
@@ -68,13 +61,6 @@ namespace huqiang
                         }
                 }
             label:;
-            //#if DEBUG
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                UnityEngine.Debug.Log(ex.StackTrace);
-            //            }
-            //#endif 
         }
         static bool DispatchEvent(RectTransform rt, Vector3 pos, Vector3 scale, Quaternion quate, UserAction action)
         {
@@ -95,7 +81,7 @@ namespace huqiang
             Quaternion q = rt.localRotation * quate;
             s.x *= scale.x;
             s.y *= scale.y;
-            var callBack = GetEventCallBack(rt);
+            EventCallBack callBack = container.Find((e)=> { return e.Target == rt; });
             if (callBack == null)
             {
                 for (int i = rt.childCount - 1; i >= 0; i--)
@@ -198,11 +184,11 @@ namespace huqiang
         }
         internal static void Rolling()
         {
-            for (int i = 0; i < max; i++)
-                if (buffer[i] != null)
-                    if (!buffer[i].forbid)
-                        if (!buffer[i].Pressed)
-                            DuringSlide(buffer[i]);
+            for (int i = 0; i < container.Count; i++)
+                if (container[i] != null)
+                    if (!container[i].forbid)
+                        if (!container[i].Pressed)
+                            DuringSlide(container[i]);
         }
         static void DuringSlide(EventCallBack back)
         {
@@ -247,105 +233,41 @@ namespace huqiang
                 if (back.ScrollEndY != null)
                     back.ScrollEndY(back);
         }
-        static EventCallBack GetEventCallBack(RectTransform rect)
-        {
-            if (buffer == null)
-                return null;
-            int np = max;
-            for (int i = max - 1; i >= 0; i--)
-                if (buffer[i] != null)
-                {
-                    if (buffer[i].Target == rect)
-                        return buffer[i];
-                    else if (buffer[i].Target == null)
-                    { buffer[i] = null; np = i; }
-                }
-                else np = i;
-            return null;
-        }
+
         public static void ReleaseEvent(RectTransform rect)
         {
-            int np = max;
-            for (int i = max - 1; i >= 0; i--)
-                if (buffer[i] != null)
-                {
-                    if (buffer[i].Target == rect)
-                    {
-                        var ua = buffer[i].FocusAction;
-                        if (ua != null)
-                        {
-                            ua.RemoveFocus(buffer[i]);
-                        }
-                        buffer[i] = null;
-                        int top = max - 1;
-                        if (i == top)
-                        {
-                            for (; top >= 0; top--)
-                            {
-                                if (buffer[top] != null)
-                                {
-                                    max = top + 1;
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-        }
-        public static void ReleaseEvent(EventCallBack back)
-        {
-            if (buffer == null)
-                return;
-            int index = back.index;
-            buffer[index] = null;
-            int top = max - 1;
-            if (index == top)
+            int index = container.FindIndex((o) => { return o.Target == rect; });
+            if (index>-1)
             {
-                for (; top >= 0; top--)
-                {
-                    if (buffer[top] != null)
-                    {
-                        max = top + 1;
-                        return;
-                    }
-                }
-            }
-            var ua = back.FocusAction;
-            if (ua != null)
-            {
-                ua.RemoveFocus(back);
+                var ins = container[index];
+                container.RemoveAt(index);
+                var ua = ins.FocusAction;
+                if (ua != null)
+                    ua.RemoveFocus(ins);
             }
         }
-        public static T RegEventCallBack<T>(RectTransform rect) where T : EventCallBack, new()
+
+        public static T RegEvent<T>(RectTransform rect) where T : EventCallBack, new()
         {
             if (rect == null)
                 return null;
-            if (buffer == null)
-                buffer = new EventCallBack[8192];
-            int np = max;
-            for (int i = max - 1; i >= 0; i--)
-                if (buffer[i] != null)
-                {
-                    if (buffer[i].Target == rect)
-                        return buffer[i] as T;
-                    else if (buffer[i].Target == null)
-                    { buffer[i] = null; np = i; }
-                }
-                else np = i;
+            int index = container.FindIndex((o)=> { return o.Target == rect; });
+            if(index>-1)
+            {
+                T t =container[index] as T;
+                if (t != null)
+                    return t;
+                container.RemoveAt(index);
+            }
             T back = new T();
             back.Target = rect;
-            buffer[np] = back;
-            back.index = np;
-            if (np == max)
-                max++;
+            container.Add(back);
             return back;
         }
-        public static EventCallBack RegEventCallBack(RectTransform rect, Type type)
+        public static EventCallBack RegEvent(RectTransform rect, Type type)
         {
             if (rect == null)
                 return null;
-            if (buffer == null)
-                buffer = new EventCallBack[8192];
             if (type == typeof(EventCallBack))
             {
             }
@@ -353,22 +275,12 @@ namespace huqiang
             {
             }
             else return null;
-            int np = max;
-            for (int i = max - 1; i >= 0; i--)
-                if (buffer[i] != null)
-                {
-                    if (buffer[i].Target == rect)
-                        return buffer[i];
-                    else if (buffer[i].Target == null)
-                    { buffer[i] = null; np = i; }
-                }
-                else np = i;
+            int index = container.FindIndex((o) => { return o.Target == rect; });
+            if (index > -1)
+                container.RemoveAt(index);
             EventCallBack back = Activator.CreateInstance(type) as EventCallBack;
             back.Target = rect;
-            buffer[np] = back;
-            back.index = np;
-            if (np == max)
-                max++;
+            container.Add(back);
             return back;
         }
         public static void ClearRoot()
@@ -378,9 +290,7 @@ namespace huqiang
         }
         public static void ClearEvent()
         {
-            for (int i = 0; i < max; i++)
-                buffer[i] = null;
-            max = 0;
+            container.Clear();
             UserAction.ClearAll();
             TextInputEvent.Reset();
         }
@@ -595,7 +505,7 @@ namespace huqiang
             }
             if (PointerUp != null)
                 PointerUp(this, action);
-            long r = DateTime.Now.Ticks - pressTime;
+            long r = UserAction.Ticks - pressTime;
             if (r <= ClickTime)
             {
                 float x = RawPosition.x - action.CanPosition.x;
@@ -623,7 +533,7 @@ namespace huqiang
                 stayTime = action.EventTicks - entryTime;
                 if (action.CanPosition == LastPosition)
                 {
-                    HoverTime += UserAction.TimeSlice * 2000;
+                    HoverTime += UserAction.TimeSlice * 10000;
                     if (HoverTime > ClickTime)
                         if (PointerHover != null)
                             PointerHover(this, action);

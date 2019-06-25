@@ -15,16 +15,16 @@ namespace huqiang
                 return null;
            return AnimationManage.Manage.FindAni<MoveAnimat>((o) => { return o.Target == trans ? true : false; });
         }
-        public static void MoveTo(this Transform trans, Vector3 pos, float time,bool hide=false, float delay = 0, Action<MoveAnimat> over = null, bool cover = true)
+        public static MoveAnimat MoveTo(this Transform trans, Vector3 pos, float time,bool hide=false, float delay = 0, Action<MoveAnimat> over = null, bool cover = true)
         {
             if (trans == null)
-                return;
+                return null;
             trans.gameObject.SetActive(true);
             var ani = AnimationManage.Manage.FindAni<MoveAnimat>((o) => { return o.Target == trans ? true : false; });
             if (ani == null)
                 ani = new MoveAnimat(trans);
             else if (!cover)
-                return;
+                return null;
             ani.StartPosition = trans.localPosition;
             ani.EndPosition = pos;
             ani.Time = time;
@@ -34,6 +34,7 @@ namespace huqiang
                 ani.PlayOver = (o) => { o.Dispose(); };
             else ani.PlayOver = over;
             ani.Play();
+            return ani;
         }
         public static RotateAnimat FindRotateAni(this Transform trans)
         {
@@ -94,16 +95,16 @@ namespace huqiang
             grap.gameObject.SetActive(true);
             return AnimationManage.Manage.FindAni<ColorAnimat>((o) => { return o.Target == grap ? true : false; });
         }
-        public static void ColorTo(this Graphic grap, Color col, float time, float delay=0, Action<ColorAnimat> over = null, bool cover = true)
+        public static ColorAnimat ColorTo(this Graphic grap, Color col, float time, float delay=0, Action<ColorAnimat> over = null, bool cover = true)
         {
             if (grap == null)
-                return;
+                return null;
             grap.gameObject.SetActive(true);
             var ani = AnimationManage.Manage.FindAni<ColorAnimat>((o) => { return o.Target == grap ? true : false; });
             if (ani == null)
                 ani = new ColorAnimat(grap);
             else if (!cover)
-                return;
+                return null;
             ani.StartColor = grap.color;
             ani.EndColor = col;
             ani.Time = time;
@@ -112,6 +113,7 @@ namespace huqiang
                 ani.PlayOver = (o) => { o.Dispose(); };
             else ani.PlayOver = over;
             ani.Play();
+            return ani;
         }
         public static ImageAnimat FindSpritesAni(this Image img)
         {

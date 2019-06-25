@@ -8,31 +8,31 @@ namespace huqiang
         /// <summary>
         /// 数据压缩类型
         /// </summary>
-        public Int16 Type;
+        public UInt16 Type;
         /// <summary>
         /// 此消息的id
         /// </summary>
-        public Int16 MsgID;
+        public UInt16 MsgID;
         /// <summary>
         /// 此消息的分卷id
         /// </summary>
-        public Int16 PartID;
+        public UInt16 PartID;
         /// <summary>
         /// 此消息的某个分卷
         /// </summary>
-        public Int16 CurPart;
+        public UInt16 CurPart;
         /// <summary>
         /// 此消息总计分卷
         /// </summary>
-        public Int16 AllPart;
+        public UInt16 AllPart;
         /// <summary>
         /// 此消息分卷长度
         /// </summary>
-        public Int16 PartLen;
+        public UInt16 PartLen;
         /// <summary>
         /// 此此消息总计长度
         /// </summary>
-        public Int32 Lenth;
+        public UInt32 Lenth;
     }
     public enum PackType
     {
@@ -139,7 +139,7 @@ namespace huqiang
         /// <param name="id">数据包标志</param>
         /// <param name="fs">每个分卷大小</param>
         /// <returns></returns>
-        public static byte[][] SubVolume(byte[] buff, byte type, Int16 id , Int16 fs)
+        public static byte[][] SubVolume(byte[] buff, byte type, UInt16 id, UInt16 fs)
         {
             fs -= 16;
             if (buff.Length < 2)
@@ -147,21 +147,21 @@ namespace huqiang
             int len = buff.Length;
             int part = len / fs;
             int r = len % fs;
-            Int16 allPart = (Int16)part;
+            UInt16 allPart = (UInt16)part;
             if (r > 0)
                 allPart++;
             byte[][] buf = new byte[allPart][];
-            Int16 msgId = id;
+            UInt16 msgId = id;
             EnvelopeHead head = new EnvelopeHead();
             for (int i = 0; i < part; i++)
             {
                 head.MsgID = msgId;
                 head.Type = type;
                 head.PartID = id;
-                head.CurPart = (Int16)i;
+                head.CurPart = (UInt16)i;
                 head.AllPart = allPart;
                 head.PartLen = fs;
-                head.Lenth = len;
+                head.Lenth = (UInt32)len;
                 byte[] tmp = new byte[fs + 16];
                 WriteHead(tmp, 0, head);
                 buf[i] = EnvelopePart(buff, tmp, i, fs, fs);
@@ -172,10 +172,10 @@ namespace huqiang
                 head.MsgID = msgId;
                 head.Type = type;
                 head.PartID = id;
-                head.CurPart = (Int16)part;
+                head.CurPart = (UInt16)part;
                 head.AllPart = allPart;
-                head.PartLen = (Int16)r;
-                head.Lenth = len;
+                head.PartLen = (UInt16)r;
+                head.Lenth = (UInt32)len;
                 byte[] tmp = new byte[r + 16];
                 WriteHead(tmp, 0, head);
                 buf[part] = EnvelopePart(buff, tmp, part, r, fs);
@@ -419,31 +419,57 @@ namespace huqiang
         /// <param name="dat"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static byte[][] PackAll(byte[] dat, byte type, Int16 msgId ,Int16 fs)
+        public static byte[][] PackAll(byte[] dat, byte type, UInt16 msgId, UInt16 fs)
         {
             int c = fs;
             c -= 9;
             c *= 124;
             c /= 128;
-            fs =(Int16) c;
+            fs = (UInt16)c;
             var buf = SubVolume(dat, type, msgId, fs);
             if (buf != null)
                 for (int i = 0; i < buf.Length; i++)
                     buf[i] = PackingInt(buf[i], type);
             return buf;
         }
-        public static byte[][] Pack(byte[] dat, byte tag, PackType type, Int16 msgID,Int16 fs)
+        public static byte[][] Pack(byte[] dat, byte tag, PackType type, UInt16 msgID, UInt16 fs)
         {
             switch (type)
             {
                 case PackType.Part:
-                    return SubVolume(dat, tag, msgID,fs);
+                    return SubVolume(dat, tag, msgID, fs);
                 case PackType.Total:
-                    return new byte[][] { PackingInt(dat, tag)};
+                    return new byte[][] { PackingInt(dat, tag) };
                 case PackType.All:
-                    return PackAll(dat, tag, msgID,fs);
+                    return PackAll(dat, tag, msgID, fs);
             }
             return null;
+        }
+        public static bool SetChecked(Int32[] checks, int part)
+        {
+            int c = part / 32;
+            int r = part % 32;
+            int o = 1 << r;
+            int v = checks[c];
+            if ((v & o) > 0)
+                return false;
+            v |= o;
+            checks[c] = v;
+            return true;
+        }
+        public static void CopyToBuff(byte[] buff, byte[] src, int start, EnvelopeHead head, int FragmentSize)
+        {
+            int index = head.CurPart * FragmentSize;
+            int len = (int)head.PartLen;
+            int all = buff.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (index >= all)
+                    break;
+                buff[index] = src[start];
+                index++;
+                start++;
+            }
         }
     }
 }

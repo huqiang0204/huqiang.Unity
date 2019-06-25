@@ -8,37 +8,36 @@ using System.Threading;
 
 namespace huqiang
 {
-    public class TcpServer
+    public class TcpServer<T>  where T : TcpLink, new()
     {
-        const int SingleCount=2048;
+        public static int SingleCount = 2048;
+        public LinkThread<T>[] linkBuff;
         Socket soc;
-        /// <summary>
-        /// 所有玩家的连接
-        /// </summary>
-        TcpLinker[] Links;
-        /// <summary>
-        /// 创建一个新的默认连接 参数socket
-        /// </summary>
-        public Func<Socket,PackType , TcpLinker> CreateModle = (s,p) => { return new TcpLinker(s,p); };
-        /// <summary>
-        /// 默认的派发消息
-        /// </summary>
-        public Action<TcpLinker, byte[]> DispatchMessage = (o, e) => { Console.WriteLine("new message"); };
         /// <summary>
         /// 单例服务器实例
         /// </summary>
-        public static TcpServer Instance;
+        public static TcpServer<T> Instance;
 
         Thread server;
-        Thread[] threads;
         PackType packType;
         IPEndPoint endPoint;
-        int ThreadCount;
+        int tCount;
         public TcpServer(string ip, int port,PackType type = PackType.All, int thread = 8)
         {
-            ThreadCount = thread;
+            tCount = thread;
             packType = type;
-            Links = new TcpLinker[thread * SingleCount];
+            if (tCount > 0)
+            {
+                linkBuff = new LinkThread<T>[tCount];
+                for (int i = 0; i < tCount; i++)
+                    linkBuff[i] = new LinkThread<T>(SingleCount);
+            }
+            else
+            {
+                tCount = 1;
+                linkBuff = new LinkThread<T>[1];
+                linkBuff[0] = new LinkThread<T>(SingleCount);
+            }
             soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             soc.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             //端点
@@ -50,16 +49,10 @@ namespace huqiang
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
+                UnityEngine.Debug.Log(ex.StackTrace);
             }
             soc.Listen(0);
             Instance = this;
-            threads = new Thread[thread];
-            for (int i = 0; i < thread; i++)
-            {
-                threads[i] = new Thread(Run);
-                threads[i].Start(i);
-            }
         }
         public void Start()
         {
@@ -79,20 +72,21 @@ namespace huqiang
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.StackTrace);
+                        UnityEngine.Debug.Log(ex.StackTrace);
                     }
                 };
             }
         }
         ThreadTimer threadTimer;
-        Int32 id = 100000;
         byte[] nil = { 0 };
         public void Dispose()
         {
             soc.Disconnect(true);
+            soc.Dispose();
             server.Abort();
-            for (int i = 0; i < threads.Length; i++)
-                threads[i].Abort();
+            Instance = null;
+            for (int i = 0; i < tCount; i++)
+                linkBuff[i].running = false;
             if (threadTimer != null)
                 threadTimer.Dispose();
         }
@@ -103,57 +97,11 @@ namespace huqiang
                 try
                 {
                     var client = soc.Accept();
-                    for (int i = 0; i < Links.Length; i++)
-                    {
-                        if (Links[i] == null)
-                        {
-                            Links[i] = CreateModle(client, packType);
-                            break;
-                        }
-                    }
+                    CreateLink(client);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.StackTrace);
-                }
-            }
-        }
-        void Run(object index)
-        {
-            int os = (int)index;
-            while (true)
-            {
-                var now = DateTime.Now;
-                long a = now.Ticks;
-                int s = os;
-                for (int i = 0; i < SingleCount; i++)
-                {
-                    var c = Links[s];
-                    if (c != null)
-                    {
-                        c.Recive();
-                    }
-                    s +=ThreadCount;
-                }
-                long t = DateTime.Now.Ticks;
-                t -= a;
-                t /= 10000;
-                if (t < 10)
-                    Thread.Sleep(10 - (int)t);
-            }
-        }
-
-        /// <summary>
-        /// 统计tcp连接
-        /// </summary>
-        void StatisticsTcp()
-        {
-            int c = 0;
-            for (int i = 0; i < Links.Length; i++)
-            {
-                if (Links[i] != null)
-                {
-                    c++;
+                    UnityEngine.Debug.Log(ex.StackTrace);
                 }
             }
         }
@@ -162,17 +110,14 @@ namespace huqiang
         /// </summary>
         void Heartbeat()
         {
-            int max = threads.Length * SingleCount;
-            for (int i = 0; i < max; i++)
+            for (int i = 0; i <tCount; i++)
             {
-                var link = Links[i];
-                if (link != null)
+                var links = linkBuff[i];
+                for (int j = 0; j < links.Count; j++)
                 {
-                    if (link.Send(nil) < 0)
-                    {
-                        Links[i] = null;
-                        link.Dispose();
-                    }
+                    var l = links[j];
+                    if (l != null)
+                        l.Send(nil);
                 }
             }
         }
@@ -180,15 +125,57 @@ namespace huqiang
         /// 广播所有在线用户
         /// </summary>
         /// <param name="action"></param>
-        public void Broadcasting(Action<TcpLinker> action)
+        public void Broadcasting(Action<T> action)
         {
-            int max = threads.Length * SingleCount;
-            for (int i = 0; i < max; i++)
+            for (int i = 0; i < tCount; i++)
             {
-                var link = Links[i];
-                if (link != null)
-                    action(link);
+                var links = linkBuff[i];
+                for (int j = 0; j < links.Count; j++)
+                {
+                    var l = links[j];
+                    if (l != null)
+                        action(l);
+                }
             }
+        }
+
+        public T FindLink(int ip, int port)
+        {
+            for (int i = 0; i < tCount; i++)
+            {
+                var l = linkBuff[i].Find(ip, port);
+                if (l != null)
+                    return l;
+            }
+            return null;
+        }
+         void CreateLink(Socket client)
+        {
+            var end =  client.RemoteEndPoint as IPEndPoint;
+            var link = new T();
+            link.SetSocket(client,end,packType);
+            int s = 0;
+            int c = linkBuff[0].Count;
+            for (int i = 1; i < tCount; i++)
+            {
+                if (c > linkBuff[i].Count)
+                {
+                    s = i;
+                    c = linkBuff[i].Count;
+                }
+            }
+            link.buffIndex = s;
+            linkBuff[s].Add(link);
+        }
+        public T FindLink(Int64 id)
+        {
+            for (int i = 0; i < tCount; i++)
+            {
+                var l = linkBuff[i].Find(id);
+                if (l != null)
+                    return l;
+            }
+            return null;
         }
     }
 }

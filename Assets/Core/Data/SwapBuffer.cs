@@ -10,8 +10,8 @@ namespace huqiang.Data
         T[] A;//源
         T[] B;//目标
         int length;
-        int maxA = 0;
-        int maxB = 0;
+        int maxA=0;
+        int maxB=0;
         public SwapBuffer(int len)
         {
             length = len;
@@ -87,10 +87,8 @@ namespace huqiang.Data
             maxB = 0;
         }
         public int Length { get { return maxA; } }
-        public T this[int index]
-        {
-            get
-            {
+        public T this[int index]{
+            get {
                 if (index < 0)
                     return null;
                 if (index >= maxA)
