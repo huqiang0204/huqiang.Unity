@@ -1,4 +1,5 @@
-﻿using huqiang.UIModel;
+﻿using huqiang.UIEvent;
+using huqiang.UIModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,6 +87,18 @@ namespace huqiang
             {
                 m_Caret.gameObject.SetActive(true);
             }
+        }
+        public static void ChangeCaret(TextInfo info)
+        {
+            if (m_Caret != null)
+            {
+                m_Caret.uIVertices = info.selectVertex;
+                m_Caret.triangle = info.selectTri;
+                m_Caret.Refresh();
+                time = 0;
+                m_Caret.gameObject.SetActive(true);
+            }
+            CaretStyle = info.CaretStyle;
         }
     }
 }

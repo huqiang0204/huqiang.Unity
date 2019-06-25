@@ -641,5 +641,8 @@ namespace huqiang
             v = q * v;
             return v;
         }
+        protected virtual void Initial()
+        {
+        }
     }
 }
