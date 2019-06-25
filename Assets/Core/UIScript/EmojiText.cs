@@ -9,12 +9,17 @@ namespace UGUI
 {
     public class EmojiText:Text
     {
-        public static Shader shader;
-        public static Texture Emoji;
         public static float NormalDpi = 96;
-
         public Action<EmojiText, VertexHelper> OnPopulate;
-        List<EmojiInfo> list = new List<EmojiInfo>();
+        EmojiString emojiString = new EmojiString();
+        public override string text {
+            get { return emojiString.FullString; }
+            set {
+                m_Text=
+                emojiString.FullString = value;
+                SetVerticesDirty();
+            }
+        }
         readonly UIVertex[] m_TempVerts = new UIVertex[4];
         static UIVertex[] CreateEmojiMesh(IList<UIVertex> verts,  List<EmojiInfo> emoji, float fontSize, float unitsPerPixel,Vector2 roundingOffset)
         {
@@ -39,39 +44,25 @@ namespace UGUI
                 i *= 4;
                 if (i >= vertCount)
                     break;
-                float x = buf[i].position.x;
-                float u = buf[i].position.y - 2f;
-                float r = buf[i + 1].position.x;
-                r = (r - x) * fontSize * 0.5f + x;
-                float y = buf[i + 3].position.y - 2f;
-                u = (u - y) * fontSize * 0.5f + y;
-                buf[i].position.x = x;
-                buf[i].position.y = u;
                 buf[i].uv0 = emoji[j].uv[0];
                 buf[i].uv0.x *= 0.5f;
                 buf[i].uv0.x += 0.5f;
                 i++;
-                buf[i].position.x = r;
-                buf[i].position.y = u;
                 buf[i].uv0 = emoji[j].uv[1];
                 buf[i].uv0.x *= 0.5f;
                 buf[i].uv0.x += 0.5f;
                 i++;
-                buf[i].position.x = r;
-                buf[i].position.y = y;
                 buf[i].uv0 = emoji[j].uv[2];
                 buf[i].uv0.x *= 0.5f;
                 buf[i].uv0.x += 0.5f;
                 i++;
-                buf[i].position.x = x;
-                buf[i].position.y = y;
                 buf[i].uv0 = emoji[j].uv[3];
                 buf[i].uv0.x *= 0.5f;
                 buf[i].uv0.x += 0.5f;
             }
             return buf;
         }
-        public static List<UIVertex> CreateEmojiMesh(Text text,  List<EmojiInfo> emojis)
+        public static List<UIVertex> CreateEmojiMesh(Text text, EmojiString emoji)
         {
             float s = Screen.dpi / NormalDpi;
             Vector2 extents = text.rectTransform.rect.size;
@@ -86,19 +77,18 @@ namespace UGUI
             t = settings.resizeTextMaxSize;
             t *= s;
             settings.resizeTextMaxSize = (int)t;
-            var txt = text.text;
-            if (txt != null & txt != "")
+            string str = emoji.FilterString;
+            if (str != null & str != "")
             {
-                string str = EmojiMap.CheckEmoji(txt, emojis);
-
                 text.cachedTextGenerator.PopulateWithErrors(str, settings, text.gameObject);
 
                 IList<UIVertex> verts = text.cachedTextGenerator.verts;
-
+                if (verts.Count == 0)
+                    return null;
                 float unitsPerPixel = 1 / text.pixelsPerUnit / s;
                 Vector2 roundingOffset = new Vector2(verts[0].position.x / s, verts[0].position.y / s) * unitsPerPixel;
                 roundingOffset = text.PixelAdjustPoint(roundingOffset) - roundingOffset;
-                var vs = CreateEmojiMesh(text.cachedTextGenerator.verts, emojis, text.fontSize, unitsPerPixel, roundingOffset);
+                var vs = CreateEmojiMesh(text.cachedTextGenerator.verts, emoji.emojis, text.fontSize*s, unitsPerPixel, roundingOffset);
 
                 if (vs != null)
                 {
@@ -132,14 +122,16 @@ namespace UGUI
             }
             return tri;
         }
+
         protected override void OnPopulateMesh(VertexHelper vertex)
         {
             if (font == null)
                 return;
             m_DisableFontTextureRebuiltCallback = true;
-            list.Clear();
             vertex.Clear();
-            var vert = CreateEmojiMesh(this,list);
+            if (m_Text != emojiString.FullString)
+                emojiString.FullString = m_Text;
+            var vert = CreateEmojiMesh(this,emojiString);
             if(vert!=null)
             {
                 var tri = CreateTri(vert.Count);

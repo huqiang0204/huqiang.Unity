@@ -11,7 +11,6 @@ namespace huqiang
     {
         static void Initial()
         {
-            EmojiText.Emoji = UnityEngine.Resources.Load<Texture2D>("emoji");
             if(Application.platform == RuntimePlatform.Android |Application.platform==RuntimePlatform.IPhonePlayer)
             {
                 UserAction.inputType = UserAction.InputType.OnlyTouch;
@@ -24,9 +23,6 @@ namespace huqiang
             {
                 IME.Initial();
             }
-            //TextElement.fonts.Add(UnityEngine.Resources.Load<Font>("zcoolwenyiti"));
-            //TextElement.fonts.Add(Font.CreateDynamicFontFromOSFont("zcoolwenyiti", 16));
-             TextElement.fonts.Add(UnityEngine.Resources.Load<Font>("ArtFont"));
         }
         static void InitialUI()
         {
