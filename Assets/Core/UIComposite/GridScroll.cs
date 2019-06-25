@@ -61,7 +61,7 @@ namespace huqiang.UIModel
             
             if (model != null)
             {
-                ItemMod = model.FindChild("Item");
+                ItemMod = model.Find("Item");
                 if (ItemMod != null)
                     ItemSize = ItemMod.data.sizeDelta;
             }

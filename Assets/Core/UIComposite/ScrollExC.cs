@@ -38,13 +38,13 @@ namespace huqiang.UIModel
             Tails = new List<Item>();
             if (model != null)
             {
-                TitleMod = model.FindChild("Title");
+                TitleMod = model.Find("Title");
                 if (TitleMod != null)
                     TitleSize = TitleMod.data.sizeDelta;
-                ItemMod = model.FindChild("Item");
+                ItemMod = model.Find("Item");
                 if (ItemMod != null)
                     ItemSize = ItemMod.data.sizeDelta;
-                TailMod = model.FindChild("Tail");
+                TailMod = model.Find("Tail");
                 if (TailMod != null)
                     TailSize = TailMod.data.sizeDelta;
             }

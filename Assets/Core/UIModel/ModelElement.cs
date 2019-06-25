@@ -196,7 +196,7 @@ namespace huqiang.UIModel
             return fake;
         }
 
-        public ModelElement FindChild(string name)
+        public ModelElement Find(string name)
         {
             for (int i = 0; i < child.Count; i++)
                 if (child[i].name == name)

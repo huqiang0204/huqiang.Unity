@@ -59,8 +59,6 @@ namespace huqiang.UIModel
                 Order();
             }
         }
-        //public float OffsetStart;
-        //public float OffsetEnd;
         public bool ItemDockCenter;
         public int PreDockindex { get; private set; }
 
@@ -74,6 +72,7 @@ namespace huqiang.UIModel
         ModelElement mModel;
         public override void Initial(RectTransform rect, ModelElement model)
         {
+            base.Initial(rect,model);
             ScrollView = rect;
             eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
             eventCall.Drag = Draging;
@@ -93,25 +92,17 @@ namespace huqiang.UIModel
             Size = ScrollView.sizeDelta;
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = Center;
             eventCall.CutRect = true;
-
             mModel = model;
-            if (model != null)
-            {
-                ItemMod =model.FindChild("Item");
-                if (ItemMod != null)
-                    ItemSize = ItemMod.data.sizeDelta;
-            }
         }
         public void ChangeItem(string item)
         {
             if (mModel != null)
             {
                 m_point = 0;
-                ItemMod = mModel.FindChild(item);
+                ItemMod = mModel.Find(item);
                 if (ItemMod != null)
                     ItemSize = ItemMod.data.sizeDelta;
             }
-
         }
         public Action<ScrollY, Vector2> Scroll;
         public Action<ScrollY> ScrollStart;

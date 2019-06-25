@@ -137,7 +137,7 @@ namespace huqiang.UIModel
                 if(asset==prefabs[i].name)
                 {
                     var models = prefabs[i].models;
-                    return models.FindChild(name);
+                    return models.Find(name);
                 }
             }
             return null;
@@ -177,7 +177,7 @@ namespace huqiang.UIModel
             if (prefabs == null)
                 return null;
             if (prefabs.Count > 0)
-                return prefabs[0].models.FindChild(str);
+                return prefabs[0].models.Find(str);
             return null;
         }
         public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "mod")
@@ -188,7 +188,7 @@ namespace huqiang.UIModel
             {
                 if (asset == prefabs[i].name)
                 {
-                    var m = prefabs[i].models.FindChild(mod);
+                    var m = prefabs[i].models.Find(mod);
                     LoadToGame(m, o, parent, filter);
                     return m;
                 }
@@ -238,7 +238,7 @@ namespace huqiang.UIModel
                 {
                     if (asset == prefabs[i].name)
                     {
-                        var m = prefabs[i].models.FindChild(mod);
+                        var m = prefabs[i].models.Find(mod);
                         LoadToGameR(m,reflections, parent, filter);
                         return m;
                     }

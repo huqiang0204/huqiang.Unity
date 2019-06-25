@@ -155,7 +155,6 @@ namespace huqiang.UIModel
             if (c > 0)
             {
                 ItemMods = child.ToArray();
-                child.Clear();
                 ItemMod = ItemMods[0];
                 ItemSize = ItemMods[0].data.sizeDelta;
             }
