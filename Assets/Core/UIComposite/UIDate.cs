@@ -93,8 +93,8 @@ namespace huqiang.UIComposite
             Year.ScrollEnd = YearScrollToEnd;
             Year.ItemDockCenter = true;
             Year.scrollType = ScrollType.Loop;
-            //Year.eventCall.boxSize = new Vector2(120, 160);
-            //Year.eventCall.UseAssignSize = true;
+            Year.eventCall.boxSize = new Vector2(120, 160);
+            Year.eventCall.UseAssignSize = true;
 
             var m = model.Find("Month");
             Month = new ScrollY();
@@ -104,8 +104,8 @@ namespace huqiang.UIComposite
             Month.ScrollEnd = MonthScrollToEnd;
             Month.ItemDockCenter = true;
             Month.scrollType = ScrollType.Loop;
-            //Month.eventCall.boxSize = new Vector2(120, 160);
-            //Month.eventCall.UseAssignSize = true;
+            Month.eventCall.boxSize = new Vector2(120, 160);
+            Month.eventCall.UseAssignSize = true;
 
             var d = model.Find("Day");
             Day = new ScrollY();
@@ -116,8 +116,8 @@ namespace huqiang.UIComposite
             Day.ItemDockCenter = true;
             Day.ScrollEnd = DayScrollToEnd;
             Day.scrollType = ScrollType.Loop;
-            //Day.eventCall.boxSize = new Vector2(120, 160);
-            //Day.eventCall.UseAssignSize = true;
+            Day.eventCall.boxSize = new Vector2(120, 160);
+            Day.eventCall.UseAssignSize = true;
 
             var fs = mod.GetExtand();
             if (fs != null)

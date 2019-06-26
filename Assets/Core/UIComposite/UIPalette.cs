@@ -26,8 +26,9 @@ namespace huqiang.UIComposite
         public Action<UIPalette> ColorChanged;
         public Action<UIPalette> TemplateChanged;
         UISlider uISlider;
-        public override void Initial(RectTransform rect, ModelElement mod)
+        public override void Initial(ModelElement mod)
         {
+            var rect = mod.Context;
             palette = new Palette();
             callBackR = EventCallBack.RegEvent<EventCallBack>(rect);
             callBackR.IsCircular = true;
@@ -49,7 +50,7 @@ namespace huqiang.UIComposite
             var son = mod.Find("Slider");
             slider = son.Context.GetComponent<RawImage>();
             uISlider = new UISlider();
-            uISlider.Initial(son.Context as RectTransform,son);
+            uISlider.Initial(son);
             uISlider.OnValueChanged = AlphaChanged;
             uISlider.Percentage = 1;
         }

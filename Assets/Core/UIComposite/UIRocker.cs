@@ -40,9 +40,9 @@ namespace huqiang.UIComposite
         }
         public Vector2 vector;
         public Action<UIRocker> Rocking;
-        public override void Initial(RectTransform rect, ModelElement mod)
+        public override void Initial(ModelElement mod)
         {
-            model = rect;
+            model = mod.Context;
             callBack = EventCallBack.RegEvent<EventCallBack>(model);
             callBack.Drag = Draging;
             callBack.DragEnd = DragEnd;
@@ -50,7 +50,7 @@ namespace huqiang.UIComposite
             callBack.IsCircular = true;
             _r = mod.data.sizeDelta.x * 0.5f;
             _s = _r * _r;
-            Nob = rect.Find("Nob") as RectTransform;
+            Nob = model.Find("Nob") as RectTransform;
         }
         void Draging(EventCallBack back, UserAction action, Vector2 v)
         {

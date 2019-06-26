@@ -19,14 +19,11 @@ namespace huqiang.UIComposite
         public Action<ScrollExC, Vector2> Scroll;
         public ScrollExC()
         { }
-        public ScrollExC(RectTransform con)
+        public override void Initial( ModelElement model)
         {
-            Initial(con, null);
-        }
-        public override void Initial(RectTransform rect, ModelElement model)
-        {
-            View = rect;
-            eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
+            base.Initial(model);
+            View = model.Context;
+            eventCall = EventCallBack.RegEvent<EventCallBack>(View);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
             eventCall.Scrolling = Scrolling;

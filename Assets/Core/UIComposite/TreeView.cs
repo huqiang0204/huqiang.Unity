@@ -39,10 +39,10 @@ namespace huqiang.UIComposite
             swap = new SwapBuffer<TreeViewItem, TreeViewNode>(512);
             queue = new QueueBuffer<TreeViewItem>(256);
         }
-        public override void Initial(RectTransform rect, ModelElement model)
+        public override void Initial(ModelElement model)
         {
-            View = rect;
-            eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
+            View = model.Context;
+            eventCall = EventCallBack.RegEvent<EventCallBack>(View);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
             eventCall.Scrolling = Scrolling;
