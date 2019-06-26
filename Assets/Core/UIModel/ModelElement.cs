@@ -86,8 +86,9 @@ namespace huqiang.UIModel
                     {
                         ModelElement model = new ModelElement();
                         model.Load(fs);
-                        child.Add(model);
-                        model.parent = this;
+                        model.SetParent(this);
+                        //child.Add(model);
+                        //model.parent = this;
                     }
                 }
             name = buff.GetData(data.name) as string;
