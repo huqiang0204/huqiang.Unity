@@ -52,7 +52,7 @@ namespace huqiang.UIModel
         public ElementData data;
         public List<DataConversion> components = new List<DataConversion>();
         public List<ModelElement> child = new List<ModelElement>();
-        public FakeStruct Model;
+        public FakeStruct ModData;
         unsafe public override void Load(FakeStruct fake)
         {
             data = *(ElementData*)fake.ip;
@@ -93,7 +93,7 @@ namespace huqiang.UIModel
                 }
             name = buff.GetData(data.name) as string;
             tag = buff.GetData(data.tag) as string;
-            Model = fake;
+            ModData = fake;
         }
         public override void LoadToObject(Component com)
         {
@@ -406,8 +406,8 @@ namespace huqiang.UIModel
         }
         public FakeStruct GetExtand()
         {
-            if (Model != null)
-                return Model.buffer.GetData(data.ex) as FakeStruct;
+            if (ModData != null)
+                return ModData.buffer.GetData(data.ex) as FakeStruct;
             return null;
         }
         public Action<ModelElement> SizeChanged;
