@@ -68,14 +68,10 @@ namespace huqiang.UIComposite
         public DragContent()
         {
         }
-        public DragContent(RectTransform rect)
+        public override void Initial(ModelElement model)
         {
-            Initial(rect, null);
-        }
-        public override void Initial(RectTransform rect, ModelElement model)
-        {
-            view = rect;
-            eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
+            view =model.Context;
+            eventCall = EventCallBack.RegEvent<EventCallBack>(view);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
             eventCall.Scrolling = Scrolling;

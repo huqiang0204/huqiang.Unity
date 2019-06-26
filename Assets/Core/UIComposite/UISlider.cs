@@ -72,17 +72,17 @@ namespace huqiang.UIComposite
             info.MinScale = 1;
             info.MinScale = 1;
         }
-        public override void Initial(RectTransform rect, ModelElement mod)
+        public override void Initial(ModelElement mod)
         {
-            model = rect;
-            callBack = EventCallBack.RegEvent<EventCallBack>(rect);
+            model = mod.Context;
+            callBack = EventCallBack.RegEvent<EventCallBack>(model);
             callBack.Drag = callBack.DragEnd = Draging;
             callBack.PointerDown = PointDown;
             callBack.AutoColor = false;
-            FillImage = rect.Find("FillImage") as RectTransform;
+            FillImage = model.Find("FillImage") as RectTransform;
             if (FillImage != null)
                 image = FillImage.GetComponent<Image>();
-            Nob = rect.Find("Nob") as RectTransform;
+            Nob = model.Find("Nob") as RectTransform;
             var fake = mod.GetExtand();
             if(fake!=null)
             {

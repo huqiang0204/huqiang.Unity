@@ -116,20 +116,6 @@ namespace huqiang.UIModel
             prefabs.Add(asset);
             return asset;
         }
-        public static ModelElement GetMod(ModelElement mod, string name)
-        {
-            if (mod.tag == "mod")
-                if (mod.name == name)
-                    return mod;
-            var c = mod.child;
-            for (int i = 0; i < c.Count; i++)
-            {
-                var m = GetMod(c[i], name);
-                if (m != null)
-                    return m;
-            }
-            return null;
-        }
         public static ModelElement FindModel(string asset,string name)
         {
             for(int i=0;i<prefabs.Count;i++)
@@ -180,7 +166,7 @@ namespace huqiang.UIModel
                 return prefabs[0].models.Find(str);
             return null;
         }
-        public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "mod")
+        public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "Item")
         {
             if (prefabs == null)
                 return null;
@@ -195,7 +181,7 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "mod")
+        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "Item")
         {
             if (o != null)
             {
@@ -228,7 +214,7 @@ namespace huqiang.UIModel
             temp.All = reflections;
             return temp;
         }
-        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent, string filter = "mod")
+        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent, string filter = "Item")
         {
             if (prefabs == null)
                 return null;
@@ -246,7 +232,7 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent, string filter = "mod")
+        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent, string filter = "Item")
         {
             if (mod == null)
             {
@@ -255,7 +241,7 @@ namespace huqiang.UIModel
 #endif
                 return null;
             }
-            if (mod.tag == filter)
+            if (mod.name == filter)
                 return null;
             var g = CreateNew(mod.data.type);
             if (g == null)
@@ -294,7 +280,7 @@ namespace huqiang.UIModel
                     else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
                     {
                         var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
-                        obj.Initial(t as RectTransform, mod);
+                        obj.Initial( mod);
                         m.Value = obj;
                     }
                     else if (typeof(Component).IsAssignableFrom(m.FieldType))
@@ -347,7 +333,7 @@ namespace huqiang.UIModel
     }
     public abstract class ModelInital
     {
-        public virtual void Initial(RectTransform rect, ModelElement mod) { }
+        public virtual void Initial(ModelElement mod) { }
     }
     public class TypeContext
     {

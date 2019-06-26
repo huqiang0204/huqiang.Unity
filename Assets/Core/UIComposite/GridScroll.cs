@@ -46,9 +46,10 @@ namespace huqiang.UIComposite
                 Row++;
             ActualSize = new Vector2(Column * ItemSize.x, Row * ItemSize.y);
         }
-        public override void Initial(RectTransform rect, ModelElement model)
+        public override void Initial( ModelElement model)
         {
-            base.Initial(rect,model);
+            base.Initial(model);
+            var rect = model.Context;
             eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
@@ -59,13 +60,6 @@ namespace huqiang.UIComposite
             eventCall.CutRect = true;
             eventCall.ScrollEndX = OnScrollEndX;
             eventCall.ScrollEndY = OnScrollEndY;
-            
-            if (model != null)
-            {
-                ItemMod = model.Find("Item");
-                if (ItemMod != null)
-                    ItemSize = ItemMod.data.sizeDelta;
-            }
         }
         void Scrolling(EventCallBack back, Vector2 v)
         {

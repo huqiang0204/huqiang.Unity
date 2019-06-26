@@ -66,16 +66,12 @@ namespace huqiang.UIComposite
         public ScrollY()
         {
         }
-        public ScrollY(RectTransform rect)
-        {
-            Initial(rect, null);
-        }
         ModelElement mModel;
-        public override void Initial(RectTransform rect, ModelElement model)
+        public override void Initial( ModelElement model)
         {
-            base.Initial(rect,model);
-            ScrollView = rect;
-            eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
+            base.Initial(model);
+            ScrollView = model.Context;
+            eventCall = EventCallBack.RegEvent<EventCallBack>(ScrollView);
             eventCall.Drag = Draging;
             eventCall.DragEnd = (o, e, s) => {
                 Scrolling(o, s);
@@ -319,6 +315,25 @@ namespace huqiang.UIComposite
             Size = size;
             ScrollView.sizeDelta = size;
             Refresh();
+        }
+        public static ScrollItem GetCenterItem(List<ScrollItem> items)
+        {
+            if (items.Count < 1)
+                return null;
+            float min = 100;
+            ScrollItem item = items[0];
+            for (int i = 1; i < items.Count; i++)
+            {
+                float y = items[i].target.transform.localPosition.y;
+                if (y < 0)
+                    y = -y;
+                if (y < min)
+                {
+                    min = y;
+                    item = items[i];
+                }
+            }
+            return item;
         }
     }
 }

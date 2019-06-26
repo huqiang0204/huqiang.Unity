@@ -148,9 +148,9 @@ namespace huqiang.UIComposite
         /// </summary>
         public Action<ScrollItem> ItemRecycle;
         Constructor creator;
-        public override void Initial(RectTransform rect, ModelElement model)
+        public override void Initial(ModelElement model)
         {
-            ScrollView = rect;
+            ScrollView = model.Context;
             var child = model.child;
             int c = child.Count;
             if (c > 0)

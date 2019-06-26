@@ -40,14 +40,10 @@ namespace huqiang.UIComposite
         public ScrollX()
         {
         }
-        public ScrollX(RectTransform rect)
+        public override void Initial(ModelElement model)
         {
-            Initial(rect, null);
-        }
-        public override void Initial(RectTransform rect, ModelElement model)
-        {
-            ScrollView = rect;
-            eventCall = EventCallBack.RegEvent<EventCallBack>(rect);
+            ScrollView = model.Context;
+            eventCall = EventCallBack.RegEvent<EventCallBack>(ScrollView);
             eventCall.Drag = Draging;
             eventCall.DragEnd = (o, e, s) => {
                 Scrolling(o, s);
@@ -67,7 +63,6 @@ namespace huqiang.UIComposite
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = Center;
             eventCall.CutRect = true;
             Model = model;
-            //SetItemModel(0);
         }
         void Draging(EventCallBack back, UserAction action, Vector2 v)
         {
