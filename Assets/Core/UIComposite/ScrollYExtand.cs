@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace huqiang.UIComposite
 {
-    public class ScrollExC : ModelInital
+    public class ScrollYExtand : ModelInital
     {
         EventCallBack eventCall;
         protected float height;
@@ -16,8 +16,8 @@ namespace huqiang.UIComposite
         public float Point;
         public RectTransform View;
         public Vector2 ActualSize;
-        public Action<ScrollExC, Vector2> Scroll;
-        public ScrollExC()
+        public Action<ScrollYExtand, Vector2> Scroll;
+        public ScrollYExtand()
         { }
         public override void Initial( ModelElement model)
         {

@@ -31,7 +31,21 @@ namespace huqiang.UIComposite
         protected float width;
         int Row= 1;
         float m_point;
-        public float Point;
+        public float Point { get { return m_point; } set { Refresh(0, value - m_point); } }
+        /// <summarx>
+        /// 0-1之间
+        /// </summarx>
+        public float Pos
+        {
+            get { var p = m_point / (ActualSize.x - Size.x); if (p < 0) p = 0; else if (p > 1) p = 1; return p; }
+            set
+            {
+                if (value < 0 | value > 1)
+                    return;
+                m_point = value * (ActualSize.x - Size.x);
+                Order();
+            }
+        }
         public Action<ScrollX, Vector2> Scroll;
         public Action<ScrollX> ScrollStart;
         public Action<ScrollX> ScrollEnd;

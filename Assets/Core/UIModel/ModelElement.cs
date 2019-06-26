@@ -203,6 +203,16 @@ namespace huqiang.UIModel
                     return child[i];
             return null;
         }
+        public void SetParent(ModelElement element)
+        {
+            if (element == this)
+                return;
+            if (parent != null)
+                parent.child.Remove(this);
+            if (element != null)
+                element.child.Add(this);
+            parent = element;
+        }
         public T GetComponent<T>()where T:DataConversion
         {
             for (int i = 0; i < components.Count; i++)
@@ -351,7 +361,6 @@ namespace huqiang.UIModel
                 var t = transform.root as RectTransform;
                 size = t.sizeDelta;
             }
-
             RectTransform rect = transform as RectTransform;
             Docking(rect, ele.data.scaleType, size, ele.data.DesignSize);
             if (ele.data.sizeType == SizeType.Anchor)
@@ -383,7 +392,11 @@ namespace huqiang.UIModel
         public static void ScaleSize(ModelElement element)
         {
             if (element.data.SizeScale)
+            {
                 Resize(element);
+                if (element.SizeChanged != null)
+                    element.SizeChanged(element);
+            }
             var child = element.child;
             for (int i = 0; i < child.Count; i++)
             {
@@ -396,5 +409,6 @@ namespace huqiang.UIModel
                 return Model.buffer.GetData(data.ex) as FakeStruct;
             return null;
         }
+        public Action<ModelElement> SizeChanged;
     }
 }
