@@ -9,10 +9,6 @@ namespace huqiang
 {
     public class EventCallBack
     {
-        /// <summary>
-        /// 设置默认最小的按钮框
-        /// </summary>
-        public static Vector2 MinBox = new Vector2(80, 80);
         static List<RectTransform> Roots;
         public static void InsertRoot(RectTransform rect, int index = 0)
         {
@@ -109,12 +105,10 @@ namespace huqiang
                 bool inside = false;
                 float w = rt.sizeDelta.x * s.x;
                 float h = rt.sizeDelta.y * s.y;
-                if (!callBack.UseActualSize)
+                if(callBack.UseAssignSize)
                 {
-                    if (w < MinBox.x)
-                        w = MinBox.x;
-                    if (h < MinBox.y)
-                        h = MinBox.y;
+                    w = callBack.boxSize.x * s.x;
+                    h = callBack.boxSize.y * s.y;
                 }
                 if (callBack.IsCircular)
                 {
@@ -411,6 +405,9 @@ namespace huqiang
                 }
             }
         }
+        /// <summary>
+        /// 开启此项,范围外不会把事件传给子组件
+        /// </summary>
         public bool CutRect = false;
         /// <summary>
         /// 强制事件不被子组件拦截
@@ -420,14 +417,15 @@ namespace huqiang
         /// 允许事件穿透
         /// </summary>
         public bool Penetrate = false;
-        /// <summary>
-        /// 当此项开启时忽略最小尺寸校正
-        /// </summary>
-        public bool UseActualSize = false;
         public bool IsCircular = false;
         public bool entry { get; protected set; }
         private int index;
         public bool AutoColor = true;
+        public Vector2 boxSize;
+        /// <summary>
+        ///  使用指定尺寸
+        /// </summary>
+        public bool UseAssignSize = false;
         Color g_color;
         public object DataContext;
         Vector3 pgs = Vector3.one;
