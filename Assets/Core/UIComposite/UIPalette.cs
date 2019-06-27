@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UIComposite
 {
-    public class UIPalette : ModelInital
+    public class UIPalette : ModelInitalS
     {
         EventCallBack callBackR;
         EventCallBack callBackC;
@@ -28,6 +28,7 @@ namespace huqiang.UIComposite
         UISlider uISlider;
         public override void Initial(ModelElement mod)
         {
+            mod.InstantiateChild();
             var rect = mod.Context;
             palette = new Palette();
             callBackR = EventCallBack.RegEvent<EventCallBack>(rect);

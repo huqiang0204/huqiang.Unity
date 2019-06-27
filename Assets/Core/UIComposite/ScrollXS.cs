@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace huqiang.UIComposite
 {
-    public class ScrollXS : ModelInital
+    public class ScrollXS : ModelInitalS
     {
         public ScrollX scroll;
         public UISlider slider;

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UIComposite
 {
-    public class UIDate : ModelInital
+    public class UIDate : ModelInitalS
     {
         class ItemView
         {
@@ -86,6 +86,7 @@ namespace huqiang.UIComposite
         {
             model = mod;
             var y = model.Find("Year");
+            y.Instantiate();
             Year = new ScrollY();
             Year.Initial(y);
             Year.SetItemUpdate<ItemView, int>((o, e, i) => { o.Item.text = e.ToString(); });
@@ -97,6 +98,7 @@ namespace huqiang.UIComposite
             Year.eventCall.UseAssignSize = true;
 
             var m = model.Find("Month");
+            m.Instantiate();
             Month = new ScrollY();
             Month.Initial(m);
             Month.SetItemUpdate<ItemView, string>((o, e, i) => { o.Item.text = e; });
@@ -108,6 +110,7 @@ namespace huqiang.UIComposite
             Month.eventCall.UseAssignSize = true;
 
             var d = model.Find("Day");
+            d.Instantiate();
             Day = new ScrollY();
             Day.Initial(d);
             Day.SetItemUpdate<ItemView, string>((o, e, i) => { o.Item.text = e; });

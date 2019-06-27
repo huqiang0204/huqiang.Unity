@@ -11,7 +11,7 @@ namespace huqiang.UIComposite
     {
         Horizontal, Vertical
     }
-    public class StackPanel : ModelInital
+    public class StackPanel : ModelInitalS
     {
         public ModelElement model;
 

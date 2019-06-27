@@ -177,9 +177,9 @@ public class EditorModelManager
                 m.SetValue(o, t.gameObject);
             else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
                 m.SetValue(o, EventCallBack.RegEvent(t as RectTransform, m.FieldType));
-            else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
+            else if (typeof(ModelInitalS).IsAssignableFrom(m.FieldType))
             {
-                var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
+                var obj = Activator.CreateInstance(m.FieldType) as ModelInitalS;
                 obj.Initial(mod);
                 m.SetValue(o, obj);
             }

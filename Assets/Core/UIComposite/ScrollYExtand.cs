@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace huqiang.UIComposite
 {
-    public class ScrollYExtand : ModelInital
+    public class ScrollYExtand : ModelInitalS
     {
         EventCallBack eventCall;
         protected float height;

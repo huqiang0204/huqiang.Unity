@@ -289,12 +289,18 @@ namespace huqiang.UIModel
                         m.Value = t.gameObject;
                     else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
                         m.Value = EventCallBack.RegEvent(t as RectTransform, m.FieldType);
+                    else if (typeof(ModelInitalS).IsAssignableFrom(m.FieldType))
+                    {
+                        var obj = Activator.CreateInstance(m.FieldType) as ModelInitalS;
+                        obj.Initial(mod);
+                        m.Value = obj;
+                        state = 2;
+                    }
                     else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
                     {
                         var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
                         obj.Initial(mod);
                         m.Value = obj;
-                        state = 2;
                     }
                     else if (typeof(Component).IsAssignableFrom(m.FieldType))
                         m.Value = t.GetComponent(m.FieldType);
@@ -374,6 +380,16 @@ namespace huqiang.UIModel
         public int Top;
         public ReflectionModel[] All;
     }
+    /// <summary>
+    /// 子物体由自己初始化
+    /// </summary>
+    public abstract class ModelInitalS
+    {
+        public virtual void Initial(ModelElement mod) { }
+    }
+    /// <summary>
+    /// 子物体由管理器初始化
+    /// </summary>
     public abstract class ModelInital
     {
         public virtual void Initial(ModelElement mod) { }

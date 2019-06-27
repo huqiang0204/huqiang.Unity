@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UIComposite
 {
-    public class Paint : ModelInital
+    public class Paint : ModelInitalS
     {
         public enum DrawModel
         {

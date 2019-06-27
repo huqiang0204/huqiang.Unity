@@ -70,7 +70,7 @@ namespace huqiang.UIComposite
         }
         public override void Initial(ModelElement model)
         {
-            view =model.Context;
+            view = model.Context;
             eventCall = EventCallBack.RegEvent<EventCallBack>(view);
             eventCall.Drag = (o, e, s) => { Scrolling(o, s); };
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };

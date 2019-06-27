@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace huqiang.UIComposite
 {
-    public class UIRocker: ModelInital
+    public class UIRocker: ModelInitalS
     {
         RectTransform model;
         public RectTransform Nob;
@@ -42,6 +42,8 @@ namespace huqiang.UIComposite
         public Action<UIRocker> Rocking;
         public override void Initial(ModelElement mod)
         {
+            var nob =  mod.Find("Nob");
+            nob.Instantiate();
             model = mod.Context;
             callBack = EventCallBack.RegEvent<EventCallBack>(model);
             callBack.Drag = Draging;
@@ -50,7 +52,7 @@ namespace huqiang.UIComposite
             callBack.IsCircular = true;
             _r = mod.data.sizeDelta.x * 0.5f;
             _s = _r * _r;
-            Nob = model.Find("Nob") as RectTransform;
+            Nob = nob.Context;
         }
         void Draging(EventCallBack back, UserAction action, Vector2 v)
         {

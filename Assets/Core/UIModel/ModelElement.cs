@@ -231,10 +231,15 @@ namespace huqiang.UIModel
         {
             if (Main == null)
                 Main = ModelManagerUI.CreateNew(data.type);
-            else if (parent != null)
+            if (parent != null)
                 if (Context.parent != parent.Context)
                     Context.SetParent(parent.Context);
             LoadToObject(Main.transform);
+        }
+        public void InstantiateChild()
+        {
+            for (int i = 0; i < child.Count; i++)
+                child[i].Instantiate();
         }
         public void Recycle()
         {

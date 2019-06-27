@@ -549,7 +549,7 @@ namespace huqiang.UIComposite
             }
         }
     }
-    public class Layout : ModelInital
+    public class Layout : ModelInitalS
     {
         public static float LineWidth = 12f;
         public List<LayoutLine> lines = new List<LayoutLine>();

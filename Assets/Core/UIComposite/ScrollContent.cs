@@ -12,7 +12,7 @@ namespace huqiang.UIComposite
     {
         None, Loop, BounceBack
     }
-    public class ScrollContent : ModelInital
+    public class ScrollContent : ModelInitalS
     {
         class Constructor
         {

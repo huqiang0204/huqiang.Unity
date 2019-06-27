@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace huqiang.UIComposite
 {
-    public class DropdownEx : ModelInital
+    public class DropdownEx : ModelInitalS
     {
         public class PopItemMod
         {

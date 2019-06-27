@@ -15,7 +15,7 @@ namespace huqiang.UIComposite
         public static int Size = sizeof(SliderInfo);
         public static int ElementSize = Size / 4;
     }
-    public class UISlider : ModelInital
+    public class UISlider : ModelInitalS
     {
         public enum Direction
         {
@@ -74,15 +74,19 @@ namespace huqiang.UIComposite
         }
         public override void Initial(ModelElement mod)
         {
+            var fill = mod.Find("FillImage");
+            fill.Instantiate();
+            var nob = mod.Find("Nob");
+            nob.Instantiate();
             model = mod.Context;
             callBack = EventCallBack.RegEvent<EventCallBack>(model);
             callBack.Drag = callBack.DragEnd = Draging;
             callBack.PointerDown = PointDown;
             callBack.AutoColor = false;
-            FillImage = model.Find("FillImage") as RectTransform;
+            FillImage = fill.Context;
             if (FillImage != null)
                 image = FillImage.GetComponent<Image>();
-            Nob = model.Find("Nob") as RectTransform;
+            Nob = nob.Context;
             var fake = mod.GetExtand();
             if(fake!=null)
             {
