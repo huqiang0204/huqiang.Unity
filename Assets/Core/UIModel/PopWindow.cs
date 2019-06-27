@@ -1,4 +1,5 @@
-﻿using System;
+﻿using huqiang.UIModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ using UnityEngine;
 public class PopWindow : UIBase
 {
     public Func<bool> Back { get; set; }
-    protected Page MainPage;
-    public virtual void Initial(Transform parent, Page page, object obj = null)
+    protected UIPage MainPage;
+    public virtual void Initial(ModelElement  parent, UIPage page, object obj = null)
     {
         base.Initial(parent, page, obj);
         MainPage = page;

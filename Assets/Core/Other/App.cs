@@ -62,7 +62,7 @@ namespace huqiang
             }
             else  UIRoot = uiRoot;
             UIRoot.sizeDelta = new Vector2(Screen.width, Screen.height);
-            Page.Root = UIRoot;
+
             var buff = new GameObject("buffer",typeof(Canvas));
             buff.SetActive(false);
             ModelManagerUI.CycleBuffer = buff.transform;
@@ -78,7 +78,7 @@ namespace huqiang
             Keyboard.DispatchEvent();
             ThreadMission.ExtcuteMain();
             Resize();
-            Page.Refresh(UserAction.TimeSlice);
+            UIPage.Refresh(UserAction.TimeSlice);
             AllTime += Time.deltaTime;
             //DownloadManager.UpdateMission();
         }
@@ -97,8 +97,8 @@ namespace huqiang
             {
                 Scale.ScreenWidth = w;
                 Scale.ScreenHeight = h;
-                if (Page.CurrentPage != null)
-                    Page.CurrentPage.ReSize();
+                if (UIPage.CurrentPage != null)
+                    UIPage.CurrentPage.ReSize();
             }
         }
         public static void Dispose()

@@ -185,7 +185,7 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent)
+        public static ModelElement LoadToGame(string asset, string mod, object o)
         {
             if (prefabs == null)
                 return null;
@@ -194,18 +194,18 @@ namespace huqiang.UIModel
                 if (asset == prefabs[i].name)
                 {
                     var m = prefabs[i].models.Find(mod);
-                    LoadToGame(m, o, parent);
+                    LoadToGame(m, o);
                     return m;
                 }
             }
             return null;
         }
-        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent)
+        public static GameObject LoadToGame(ModelElement mod, object o)
         {
             if (o != null)
             {
                 var tmp = ObjectFelds(o);
-                var g = LoadToGameR(mod, tmp, parent);
+                var g = LoadToGameR(mod, tmp);
                 ReflectionModel[] all = tmp.All;
                 for (int i = 0; i < all.Length; i++)
                     all[i].field.SetValue(o, all[i].Value);
@@ -213,7 +213,7 @@ namespace huqiang.UIModel
             }
             else
             {
-                return LoadToGameR(mod, null, parent);
+                return LoadToGameR(mod, null);
             }
         }
         public static TempReflection ObjectFelds(object obj)
@@ -233,7 +233,7 @@ namespace huqiang.UIModel
             temp.All = reflections;
             return temp;
         }
-        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent)
+        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections)
         {
             if (prefabs == null)
                 return null;
@@ -244,14 +244,14 @@ namespace huqiang.UIModel
                     if (asset == prefabs[i].name)
                     {
                         var m = prefabs[i].models.Find(mod);
-                        LoadToGameR(m,reflections, parent);
+                        LoadToGameR(m,reflections);
                         return m;
                     }
                 }
             }
             return null;
         }
-        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent)
+        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections)
         {
             if (mod == null)
             {
@@ -267,7 +267,7 @@ namespace huqiang.UIModel
             var t = mod.Context;
             var c = mod.child;
             for (int i = 0; i < c.Count; i++)
-                LoadToGameR(c[i], reflections, t);
+                LoadToGameR(c[i], reflections);
             return mod.Main;
         }
         /// <summary>

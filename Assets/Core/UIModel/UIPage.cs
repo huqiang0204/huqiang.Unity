@@ -38,21 +38,29 @@ public class UIBase
         point++;
     }
     public object DataContext;
-    public Transform Parent { get; protected set; }
+    public ModelElement Parent { get; protected set; }
     public GameObject main { get; protected set; }
     public ModelElement model { get; protected set; }
     protected UIBase UIParent;
-    public virtual void Initial(Transform parent, UIBase ui, object obj = null)
+    public T LoadUI<T>(string asset,string name)where T:class,new()
+    {
+        model = ModelManagerUI.CloneModel(asset, name);
+        T t= new T();
+        ModelManagerUI.LoadToGame(model, t);
+        return t;
+    }
+    public virtual void Initial(ModelElement parent, UIBase ui, object obj = null)
     {
         DataContext = obj;
         UIParent = ui;
         Parent = parent;
         if (model != null)
             main = model.Main;
-        if (main != null)
+        if (model != null)
         {
-            var t = main.transform;
-            t.SetParent(parent);
+            model.SetParent(parent);
+            var t = model.Context;
+            t.SetParent(Parent.Context);
             t.localPosition = Vector3.zero;
             t.localScale = Vector3.one;
         }
@@ -97,9 +105,8 @@ public class UIBase
 
     }
 }
-public class Page:UIBase
+public class UIPage:UIBase
 {
-
     //public  PopType _popType = PopType.None;//默认
     class PageInfo
     {
@@ -114,9 +121,9 @@ public class Page:UIBase
     {
         pages.Clear();
     }
-    public static RectTransform Root { get;  set; }
-    public static Page CurrentPage { get; private set; }
-    public static void LoadPage<T>(object dat = null) where T : Page, new()
+    public static ModelElement Root { get;  set; }
+    public static UIPage CurrentPage { get; private set; }
+    public static void LoadPage<T>(object dat = null) where T : UIPage, new()
     {
         if (CurrentPage is T)
         {
@@ -138,7 +145,7 @@ public class Page:UIBase
     }
     public static void LoadPage(Type type, object dat = null)
     {
-        if (typeof(Page).IsAssignableFrom(type))
+        if (typeof(UIPage).IsAssignableFrom(type))
         {
             if (CurrentPage != null)
                 if (CurrentPage.GetType() == type)
@@ -150,7 +157,7 @@ public class Page:UIBase
             AnimationManage.Manage.ReleaseAll();
             if (CurrentPage != null)
                 CurrentPage.Dispose();
-            var t = Activator.CreateInstance(type) as Page;
+            var t = Activator.CreateInstance(type) as UIPage;
             CurrentPage = t;
             t.Initial(Root, dat);
             t.ReSize();
@@ -189,7 +196,7 @@ public class Page:UIBase
             CurrentPage.Update(time);
     }
 
-    public Page()
+    public UIPage()
     {
         pops = new List<PopWindow>();
     }
@@ -199,23 +206,17 @@ public class Page:UIBase
     protected GameObject mask;
     // public PopWindow currentPop { get; private set; }
     public PopWindow currentPop { get;  set; }
-    public virtual void Initial(Transform parent, object dat = null) {
-        Parent = parent;
+    public virtual void Initial(ModelElement parent, object dat = null) {
         DataContext = dat;
-        if(main!=null)
+        Parent = parent;
+        if (model!=null)
         {
-            var t = main.transform;
-            t.SetParent(parent);
+            model.SetParent(parent);
+            var t =model.Context;
+            t.SetParent(Parent.Context);
             t.localPosition = Vector3.zero;
             t.localScale = Vector3.one;
         }
-    }
-    public virtual void Initial(Transform parent, object dat = null, Type back = null, Type pop = null, object backData = null)
-    {
-        Initial(parent,dat);
-        BackPage = back;
-        BackPop = pop;
-        BackData = backData;
     }
     public virtual void Show(object dat=null)
     {
@@ -243,7 +244,7 @@ public class Page:UIBase
         currentPop = null;
     }
     List<PopWindow> pops;
-    protected T ShowPopWindow<T>(object obj = null, Transform parent = null) where T : PopWindow, new()
+    protected T ShowPopWindow<T>(object obj = null, ModelElement parent = null) where T : PopWindow, new()
     {
         if (mask != null)
             mask.gameObject.SetActive(true);
@@ -265,7 +266,7 @@ public class Page:UIBase
         t.ReSize();
         return t;
     }
-    protected object ShowPopWindow(Type type, object obj = null, Transform parent = null)
+    protected object ShowPopWindow(Type type, object obj = null, ModelElement parent = null)
     {
         if (mask != null)
             mask.gameObject.SetActive(true);
