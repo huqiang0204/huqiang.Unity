@@ -73,6 +73,7 @@ namespace huqiang.UIComposite
                 for (int i = 0; i < Down.Count; i++)
                     Down[i].SizeChanged();
             }
+            model.Context.localPosition = model.data.localPosition;
             for (int i = 0; i < AdjacentLines.Count; i++)
                 AdjacentLines[i].SizeChanged();
         }
@@ -163,6 +164,8 @@ namespace huqiang.UIComposite
                     if (w < 0)
                         w = -w;
                     model.data.sizeDelta.x = w;
+                    model.Context.localPosition=model.data.localPosition;
+                    model.Context.sizeDelta = model.data.sizeDelta;
                 }
                 else
                 {
@@ -173,6 +176,8 @@ namespace huqiang.UIComposite
                     if (w < 0)
                         w = -w;
                     model.data.sizeDelta.y = w;
+                    model.Context.localPosition = model.data.localPosition;
+                    model.Context.sizeDelta = model.data.sizeDelta;
                 }
                 for (int i = 0; i < Left.Count; i++)
                     Left[i].SizeChanged();
