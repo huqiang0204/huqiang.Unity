@@ -52,7 +52,7 @@ namespace huqiang.UIComposite
             gesture.DragEnd = DragEnd;
             gesture.AutoColor = false;
             gesture.TowFingerMove = TowFingerMove;
-            ThreadMission.InvokeToMain(Apply, null);
+            Apply();
         }
         void PointDown(EventCallBack callBack, UserAction action)
         {
@@ -71,7 +71,7 @@ namespace huqiang.UIComposite
                     if (LastPos.y <= hy & LastPos.y >= -hy)
                     {
                         DrawLine(LastPos, CurPos);
-                        ThreadMission.InvokeToMain(Apply, null);
+                        Apply();
                         LastPos = CurPos;
                     }
             }
@@ -174,7 +174,7 @@ namespace huqiang.UIComposite
             A1.r = (foreR * alpha) + (backR * (1.0f - alpha));
             A1.a += alpha;
         }
-        void Apply(object obj)
+        void Apply()
         {
             if (texture == null)
             {
