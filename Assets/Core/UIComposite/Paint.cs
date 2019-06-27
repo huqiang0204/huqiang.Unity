@@ -34,10 +34,11 @@ namespace huqiang.UIComposite
         Vector2 CurDirect;
         LoopBuffer<DrawArea> loopBuffer = new LoopBuffer<DrawArea>(2);
         public DrawModel drawModel;
-        public override void Initial(RectTransform rect, ModelElement mod)
+        public override void Initial(ModelElement mod)
         {
-            base.Initial(rect, mod);
+            base.Initial( mod);
             model = mod;
+            var rect = mod.Context;
             raw = rect.GetComponent<RawImage>();
             var size = model.data.sizeDelta;
             Width = (int)size.x;

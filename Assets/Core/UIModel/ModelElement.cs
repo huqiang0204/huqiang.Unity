@@ -45,6 +45,102 @@ namespace huqiang.UIModel
     }
     public class ModelElement:DataConversion
     {
+        static void LoadToObject(RectTransform com, ref ElementData data, ModelElement ui)
+        {
+            var trans = com as RectTransform;
+            trans.localRotation = data.localRotation;
+            trans.localPosition = data.localPosition;
+            trans.localScale = data.localScale;
+            trans.anchoredPosition = data.anchoredPosition;
+            trans.anchoredPosition3D = data.anchoredPosition3D;
+            trans.anchorMax = data.anchorMax;
+            trans.anchorMin = data.anchorMin;
+            trans.offsetMax = data.offsetMax;
+            trans.offsetMin = data.offsetMin;
+            trans.pivot = data.pivot;
+            trans.sizeDelta = data.sizeDelta;
+            trans.name = ui.name;
+            try
+            {
+                trans.tag = ui.tag;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex.StackTrace);
+            }
+        }
+        public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
+        {
+            var trans = com as RectTransform;
+            if (trans == null)
+                return null;
+            FakeStruct fake = new FakeStruct(buffer, ElementData.ElementSize);
+            ElementData* ed = (ElementData*)fake.ip;
+            ed->localRotation = trans.localRotation;
+            ed->localPosition = trans.localPosition;
+            ed->localScale = trans.localScale;
+            ed->anchoredPosition = trans.anchoredPosition;
+            ed->anchoredPosition3D = trans.anchoredPosition3D;
+            ed->anchorMax = trans.anchorMax;
+            ed->anchorMin = trans.anchorMin;
+            ed->offsetMax = trans.offsetMax;
+            ed->offsetMin = trans.offsetMin;
+            ed->pivot = trans.pivot;
+            ed->sizeDelta = trans.sizeDelta;
+            ed->name = buffer.AddData(trans.name);
+            ed->tag = buffer.AddData(trans.tag);
+            var coms = com.GetComponents<Component>();
+            ed->type = ModelManagerUI.GetTypeIndex(coms);
+            List<Int16> tmp = new List<short>();
+            for (int i = 0; i < coms.Length; i++)
+            {
+                var rect = coms[i] as RectTransform;
+                if (rect == null)
+                {
+                    var ss = coms[i] as SizeScaling;
+                    if (ss != null)
+                    {
+                        ed->SizeScale = true;
+                        ed->scaleType = ss.scaleType;
+                        ed->sizeType = ss.sizeType;
+                        ed->anchorType = ss.anchorType;
+                        ed->parentType = ss.parentType;
+                        ed->margin = ss.margin;
+                        ed->DesignSize = ss.DesignSize;
+                    }
+                    else if (coms[i] is UICompositeHelp)
+                    {
+                        ed->ex = buffer.AddData((coms[i] as UICompositeHelp).ToFakeStruct(buffer));
+                    }
+                    else if (!(coms[i] is CanvasRenderer))
+                    {
+                        Int16 type = 0;
+                        var fs = ModelManagerUI.LoadFromObject(coms[i], buffer, ref type);
+                        if (type > 0)
+                        {
+                            tmp.Add((Int16)buffer.AddData(fs));
+                            tmp.Add(type);
+                        }
+                    }
+                }
+            }
+            if (tmp.Count > 0)
+                ed->coms = buffer.AddData(tmp.ToArray());
+            int c = trans.childCount;
+            if (c > 0)
+            {
+                Int16[] buf = new short[c];
+                for (int i = 0; i < c; i++)
+                {
+                    var fs = LoadFromObject(trans.GetChild(i), buffer);
+                    buf[i] = (Int16)buffer.AddData(fs);
+                }
+                ed->child = buffer.AddData(buf);
+            }
+            return fake;
+        }
+
+        public GameObject Main;
         public RectTransform Context;
         public string name;
         public string tag;
@@ -97,106 +193,14 @@ namespace huqiang.UIModel
         }
         public override void LoadToObject(Component com)
         {
+            Main = com.gameObject;
             for (int i = 0; i < components.Count; i++)
                 if (components[i] != null)
                     components[i].LoadToObject(com);
             Context = com as RectTransform;
             LoadToObject(Context, ref data, this);
         }
-        static void LoadToObject(RectTransform com, ref ElementData data, ModelElement ui)
-        {
-            var trans = com as RectTransform;
-            trans.localRotation = data.localRotation;
-            trans.localPosition = data.localPosition;
-            trans.localScale = data.localScale;
-            trans.anchoredPosition = data.anchoredPosition;
-            trans.anchoredPosition3D = data.anchoredPosition3D;
-            trans.anchorMax = data.anchorMax;
-            trans.anchorMin = data.anchorMin;
-            trans.offsetMax = data.offsetMax;
-            trans.offsetMin = data.offsetMin;
-            trans.pivot = data.pivot;
-            trans.sizeDelta = data.sizeDelta;
-            trans.name = ui.name;
-            try
-            {
-                trans.tag = ui.tag;
-            }catch(Exception ex)
-            {
-                Debug.LogError(ex.StackTrace);
-            }
-        }
-        public static unsafe FakeStruct LoadFromObject(Component com, DataBuffer buffer)
-        {
-            var trans = com as RectTransform;
-            if (trans == null)
-                return null;
-            FakeStruct fake = new FakeStruct(buffer, ElementData.ElementSize);
-            ElementData* ed = (ElementData*)fake.ip;
-            ed->localRotation = trans.localRotation;
-            ed->localPosition = trans.localPosition;
-            ed->localScale = trans.localScale;
-            ed->anchoredPosition = trans.anchoredPosition;
-            ed->anchoredPosition3D = trans.anchoredPosition3D;
-            ed->anchorMax = trans.anchorMax;
-            ed->anchorMin = trans.anchorMin;
-            ed->offsetMax = trans.offsetMax;
-            ed->offsetMin = trans.offsetMin;
-            ed->pivot = trans.pivot;
-            ed->sizeDelta = trans.sizeDelta;
-            ed->name = buffer.AddData(trans.name);
-            ed->tag = buffer.AddData(trans.tag);
-            var coms = com.GetComponents<Component>();
-            ed->type = ModelManagerUI.GetTypeIndex(coms);
-            List<Int16> tmp = new List<short>();
-            for (int i = 0; i < coms.Length; i++)
-            {
-                var rect = coms[i] as RectTransform;
-                if (rect == null)
-                {
-                    var ss = coms[i] as SizeScaling;
-                    if (ss != null)
-                    {
-                        ed->SizeScale = true;
-                        ed->scaleType = ss.scaleType;
-                        ed->sizeType = ss.sizeType;
-                        ed->anchorType = ss.anchorType;
-                        ed->parentType = ss.parentType;
-                        ed->margin = ss.margin;
-                        ed->DesignSize = ss.DesignSize;
-                    }
-                    else if (coms[i] is UICompositeHelp)
-                    {
-                        ed->ex = buffer.AddData((coms[i] as UICompositeHelp).ToFakeStruct(buffer));
-                    }
-                    else if (!(coms[i] is CanvasRenderer))
-                    {
-                        Int16 type = 0;
-                        var fs = ModelManagerUI.LoadFromObject(coms[i], buffer, ref type);
-                        if(type>0)
-                        {
-                            tmp.Add((Int16)buffer.AddData(fs));
-                            tmp.Add(type);
-                        }
-                    }
-                }
-            }
-            if (tmp.Count > 0)
-                ed->coms = buffer.AddData(tmp.ToArray());
-            int c = trans.childCount;
-            if (c > 0)
-            {
-                Int16[] buf = new short[c];
-                for (int i = 0; i < c; i++)
-                {
-                    var fs = LoadFromObject(trans.GetChild(i), buffer);
-                    buf[i] = (Int16)buffer.AddData(fs);
-                }
-                ed->child = buffer.AddData(buf);
-            }
-            return fake;
-        }
-
+    
         public ModelElement Find(string name)
         {
             for (int i = 0; i < child.Count; i++)
@@ -221,7 +225,26 @@ namespace huqiang.UIModel
                     return components[i] as T;
             return null;
         }
-        public GameObject Main;
+        public void Instantiate()
+        {
+            if (Main == null)
+                Main = ModelManagerUI.CreateNew(data.type);
+            else if (parent != null)
+                if (Context.parent != parent.Context)
+                    Context.SetParent(parent.Context);
+            LoadToObject(Main.transform);
+        }
+        public void Recycle()
+        {
+            ModelManagerUI.RecycleElement(this);
+        }
+        public FakeStruct GetExtand()
+        {
+            if (ModData != null)
+                return ModData.buffer.GetData(data.ex) as FakeStruct;
+            return null;
+        }
+
 #if UNITY_EDITOR
         public void AddSizeScale()
         {
@@ -242,7 +265,7 @@ namespace huqiang.UIModel
             }
         }
 #endif
-
+        #region Size Scale
         public static Vector2[] Anchors = new[] { new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f),new Vector2(1, 0.5f),
         new Vector2(0.5f, 1),new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1)};
         public static void Docking(RectTransform rect, ScaleType dock, Vector2 pSize, Vector2 ds)
@@ -404,12 +427,7 @@ namespace huqiang.UIModel
                 ScaleSize(child[i]);
             }
         }
-        public FakeStruct GetExtand()
-        {
-            if (ModData != null)
-                return ModData.buffer.GetData(data.ex) as FakeStruct;
-            return null;
-        }
         public Action<ModelElement> SizeChanged;
+        #endregion
     }
 }

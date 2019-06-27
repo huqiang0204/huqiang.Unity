@@ -166,6 +166,25 @@ namespace huqiang.UIModel
                 return prefabs[0].models.Find(str);
             return null;
         }
+        public static ModelElement CloneModel(string asset, string name)
+        {
+            for (int i = 0; i < prefabs.Count; i++)
+            {
+                if (asset == prefabs[i].name)
+                {
+                    var models = prefabs[i].models;
+                    var mod = models.Find(name);
+                    if (mod != null)
+                    {
+                        ModelElement model = new ModelElement();
+                        model.Load(mod.ModData);
+                        return model;
+                    }
+                    return null;
+                }
+            }
+            return null;
+        }
         public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "Item")
         {
             if (prefabs == null)
@@ -243,22 +262,14 @@ namespace huqiang.UIModel
             }
             if (mod.name == filter)
                 return null;
-            var g = CreateNew(mod.data.type);
-            if (g == null)
-            {
-                return null;
-            }
-            var t = g.transform;
-            if (parent != null)
-                t.SetParent(parent);
+            mod.Instantiate();
+            var t = mod.Context;
             var c = mod.child;
             for (int i = 0; i < c.Count; i++)
                 LoadToGameR(c[i], reflections, t,filter);
-            mod.LoadToObject(t);
-            mod.Main = g;
             if (reflections != null)
                 GetObject(t, reflections, mod);
-            return g;
+            return mod.Main;
         }
         /// <summary>
         /// 对象反射
@@ -317,6 +328,35 @@ namespace huqiang.UIModel
             if (ins!=null)
                 p.SetParent(CycleBuffer);
             else GameObject.Destroy(game);
+        }
+        public static void RecycleElement(ModelElement mod)
+        {
+            if (mod == null)
+                return;
+            mod.SetParent(null);
+            if(mod.Main!=null)
+            {
+                long type = mod.data.type;
+                for (int i = 0; i < models.Count; i++)
+                {
+                    if (models[i].type == type)
+                    {
+                        var g = mod.Main;
+                        if (models[i].ReCycle(g))
+                        {
+                            g.SetActive(false);
+                            mod.Context.SetParent(CycleBuffer);
+                            mod.Context = null;
+                            mod.Main = null;
+                        }
+                        break;
+                    }
+                }
+            }
+            var child = mod.child;
+            for (int i = 0; i < child.Count; i++)
+                RecycleElement(child[i]);
+            child.Clear();
         }
     }
     public class ReflectionModel
