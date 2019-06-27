@@ -158,7 +158,7 @@ public class EditorModelManager2D
             else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
             {
                 var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
-                obj.Initial(t as RectTransform, mod);
+                obj.Initial(mod);
                 m.SetValue(o, obj);
             }
             else if (typeof(Component).IsAssignableFrom(m.FieldType))

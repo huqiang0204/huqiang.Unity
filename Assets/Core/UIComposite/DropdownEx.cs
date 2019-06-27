@@ -75,11 +75,11 @@ namespace huqiang.UIComposite
         public DropdownEx()
         {
         }
-        public override void Initial(RectTransform rect, ModelElement mod)
+        public override void Initial( ModelElement mod)
         {
-            main = rect;
+            main = mod.Context;
             ShowLabel = main.GetComponentInChildren<Text>();
-            callBack = EventCallBack.RegEvent<EventCallBack>(rect);
+            callBack = EventCallBack.RegEvent<EventCallBack>(main);
             callBack.Click = Show;
         }
         public DropdownEx(ScrollY scroll, EventCallBack parent)

@@ -189,7 +189,7 @@ namespace huqiang.UIComposite
             {
                 if (creator.hotfix)
                 {
-                    go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView, "");
+                    go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView);
                     if (creator.reflect != null)
                         a.obj = creator.reflect(go);
                     else a.obj = go;
@@ -198,12 +198,12 @@ namespace huqiang.UIComposite
                 else
                 {
                     a.obj = creator.Create();
-                    go = ModelManagerUI.LoadToGame(ItemMod, a.obj, ScrollView, "");
+                    go = ModelManagerUI.LoadToGame(ItemMod, a.obj, ScrollView);
                     a.target = go;
                 }
             }
             else {
-                go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView, "");
+                go = ModelManagerUI.LoadToGame(ItemMod, null, ScrollView);
                 a.target = go;
                 a.obj = go;
             }

@@ -147,7 +147,7 @@ namespace huqiang.UIComposite
                 it.target.SetActive(true);
                 return it;
             }
-            GameObject g = ModelManagerUI.LoadToGame(ItemMod, null, null, "");
+            GameObject g = ModelManagerUI.LoadToGame(ItemMod, null, null);
             var t = g.transform;
             t.SetParent(View);
             t.localPosition = new Vector3(10000, 10000);

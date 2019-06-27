@@ -136,7 +136,7 @@ namespace huqiang.UIComposite
             {
                 if (i >= Items.Count)
                 {
-                    GameObject g = ModelManagerUI.LoadToGame(ItemMod, null, null, "");
+                    GameObject g = ModelManagerUI.LoadToGame(ItemMod, null, null);
                     var t = g.transform;
                     t.SetParent(View);
                     t.localScale = new Vector3(1, 1, 1);
@@ -177,7 +177,7 @@ namespace huqiang.UIComposite
                 Item i = new Item();
                 if (TitleMod != null)
                 {
-                    i.target = ModelManagerUI.LoadToGame(TitleMod, null, null, "");
+                    i.target = ModelManagerUI.LoadToGame(TitleMod, null, null);
                     var t = i.target.transform;
                     t.SetParent(View);
                     t.localScale = new Vector3(1, 1, 1);
@@ -194,7 +194,7 @@ namespace huqiang.UIComposite
                 Item i = new Item();
                 if (TailMod != null)
                 {
-                    i.target = ModelManagerUI.LoadToGame(TailMod, null, null, "");
+                    i.target = ModelManagerUI.LoadToGame(TailMod, null, null);
                     var t = i.target.transform;
                     t.SetParent(View);
                     t.localScale = new Vector3(1, 1, 1);

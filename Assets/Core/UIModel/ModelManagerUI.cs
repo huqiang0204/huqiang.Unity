@@ -185,7 +185,7 @@ namespace huqiang.UIModel
             }
             return null;
         }
-        public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent, string filter = "Item")
+        public static ModelElement LoadToGame(string asset, string mod, object o, Transform parent)
         {
             if (prefabs == null)
                 return null;
@@ -194,18 +194,18 @@ namespace huqiang.UIModel
                 if (asset == prefabs[i].name)
                 {
                     var m = prefabs[i].models.Find(mod);
-                    LoadToGame(m, o, parent, filter);
+                    LoadToGame(m, o, parent);
                     return m;
                 }
             }
             return null;
         }
-        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent, string filter = "Item")
+        public static GameObject LoadToGame(ModelElement mod, object o, Transform parent)
         {
             if (o != null)
             {
                 var tmp = ObjectFelds(o);
-                var g = LoadToGameR(mod, tmp, parent, filter);
+                var g = LoadToGameR(mod, tmp, parent);
                 ReflectionModel[] all = tmp.All;
                 for (int i = 0; i < all.Length; i++)
                     all[i].field.SetValue(o, all[i].Value);
@@ -213,7 +213,7 @@ namespace huqiang.UIModel
             }
             else
             {
-                return LoadToGameR(mod, null, parent, filter);
+                return LoadToGameR(mod, null, parent);
             }
         }
         public static TempReflection ObjectFelds(object obj)
@@ -233,7 +233,7 @@ namespace huqiang.UIModel
             temp.All = reflections;
             return temp;
         }
-        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent, string filter = "Item")
+        public static ModelElement LoadToGameR(string asset, string mod, TempReflection reflections, Transform parent)
         {
             if (prefabs == null)
                 return null;
@@ -244,14 +244,14 @@ namespace huqiang.UIModel
                     if (asset == prefabs[i].name)
                     {
                         var m = prefabs[i].models.Find(mod);
-                        LoadToGameR(m,reflections, parent, filter);
+                        LoadToGameR(m,reflections, parent);
                         return m;
                     }
                 }
             }
             return null;
         }
-        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent, string filter = "Item")
+        public static GameObject LoadToGameR(ModelElement mod, TempReflection reflections, Transform parent)
         {
             if (mod == null)
             {
@@ -260,15 +260,14 @@ namespace huqiang.UIModel
 #endif
                 return null;
             }
-            if (mod.name == filter)
-                return null;
             mod.Instantiate();
+            if (reflections != null)
+                if (GetObject(mod.Context, reflections, mod) == 2)//如果是ModelInital则子物体由ModelInital自己创建维护
+                    return mod.Main;
             var t = mod.Context;
             var c = mod.child;
             for (int i = 0; i < c.Count; i++)
-                LoadToGameR(c[i], reflections, t,filter);
-            if (reflections != null)
-                GetObject(t, reflections, mod);
+                LoadToGameR(c[i], reflections, t);
             return mod.Main;
         }
         /// <summary>
@@ -277,13 +276,15 @@ namespace huqiang.UIModel
         /// <param name="t"></param>
         /// <param name="reflections"></param>
         /// <param name="mod"></param>
-        static void GetObject(Transform t, TempReflection reflections, ModelElement mod)
+        static int GetObject(Transform t, TempReflection reflections, ModelElement mod)
         {
+            int state = 0;
             for (int i = 0; i < reflections.Top; i++)
             {
                 var m = reflections.All[i];
                 if (m.name == t.name)
                 {
+                    state = 1;
                     if (m.FieldType == typeof(GameObject))
                         m.Value = t.gameObject;
                     else if (typeof(EventCallBack).IsAssignableFrom(m.FieldType))
@@ -291,8 +292,9 @@ namespace huqiang.UIModel
                     else if (typeof(ModelInital).IsAssignableFrom(m.FieldType))
                     {
                         var obj = Activator.CreateInstance(m.FieldType) as ModelInital;
-                        obj.Initial( mod);
+                        obj.Initial(mod);
                         m.Value = obj;
+                        state = 2;
                     }
                     else if (typeof(Component).IsAssignableFrom(m.FieldType))
                         m.Value = t.GetComponent(m.FieldType);
@@ -301,9 +303,10 @@ namespace huqiang.UIModel
                     var a = reflections.All[j];
                     reflections.All[i] = a;
                     reflections.All[j] = m;
-                    break;
+                    return state;
                 }
             }
+            return 0;
         }
         /// <summary>
         /// 挂载被回收得对象
