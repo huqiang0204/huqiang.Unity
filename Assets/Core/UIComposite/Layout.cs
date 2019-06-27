@@ -377,6 +377,11 @@ namespace huqiang.UIComposite
             model.data.sizeDelta.y = h;
             model.data.localPosition.x = lx + w * 0.5f;
             model.data.localPosition.y = dy + h * 0.5f;
+            if(model.Context!=null)
+            {
+                model.Context.sizeDelta = model.data.sizeDelta;
+                model.Context.localPosition = model.data.localPosition;
+            }
             if (c)
             {
                 if (auxiliary != null)
@@ -593,9 +598,7 @@ namespace huqiang.UIComposite
             AreaLevel= mod.Find("AreaLevel");
             AreaLevel.Instantiate();
             LineMod = mod.Find("Line");
-            LineMod.Instantiate();
             AreaMod = mod.Find("Area");
-            AreaMod.Instantiate();
             Auxiliary = mod.Find("Auxiliary");
             Drag = mod.Find("Drag");
             model.SizeChanged = SizeChanged;
@@ -667,7 +670,11 @@ namespace huqiang.UIComposite
         }
         public void Draging(UserAction action)
         {
-            Drag.data.localPosition = Drag.parent.Context.ScreenToLocal(action.CanPosition);
+            Drag.data.localPosition = Drag.parent.Context.ScreenToLocal(action.Position);
+            if (Drag.Context == null)
+                Drag.Instantiate();
+            else Drag.activeSelf = true;
+            Drag.Context.localPosition = Drag.data.localPosition;
         }
         public void DragEnd(UserAction action)
         {

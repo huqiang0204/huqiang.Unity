@@ -154,8 +154,7 @@ namespace huqiang
                     }
                     else if (action.IsLeftButtonUp | action.IsRightButtonUp | action.IsMiddleButtonUp)
                     {
-                        if (callBack.Pressed)
-                            callBack.OnMouseUp(action);
+                        callBack.OnMouseUp(action);
                     }
                     else
                     {
@@ -493,7 +492,6 @@ namespace huqiang
         }
         protected virtual void OnMouseUp(UserAction action)
         {
-            Pressed = false;
             entry = false;
             if (AutoColor)
             {
@@ -503,17 +501,21 @@ namespace huqiang
             }
             if (PointerUp != null)
                 PointerUp(this, action);
-            long r = UserAction.Ticks - pressTime;
-            if (r <= ClickTime)
+            if (Pressed)
             {
-                float x = RawPosition.x - action.CanPosition.x;
-                float y = RawPosition.y - action.CanPosition.y;
-                x *= x;
-                y *= y;
-                x += y;
-                if (x < ClickArea)
-                    if (Click != null)
-                        Click(this, action);
+                Pressed = false;
+                long r = DateTime.Now.Ticks - pressTime;
+                if (r <= ClickTime)
+                {
+                    float x = RawPosition.x - action.CanPosition.x;
+                    float y = RawPosition.y - action.CanPosition.y;
+                    x *= x;
+                    y *= y;
+                    x += y;
+                    if (x < ClickArea)
+                        if (Click != null)
+                            Click(this, action);
+                }
             }
         }
         protected virtual void OnMouseMove(UserAction action)

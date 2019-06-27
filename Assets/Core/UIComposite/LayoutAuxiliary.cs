@@ -191,7 +191,7 @@ namespace huqiang.UIComposite
             content.name = name;
             content.model.name = name;
             Current = content;
-            //UIAnimation.Manage.FrameToDo(2,SetTextSize,null);
+            AnimationManage.Manage.FrameToDo(1,SetTextSize,null);
             return content;
         }
         public void AddContent(LayoutContent con)
@@ -200,7 +200,10 @@ namespace huqiang.UIComposite
                 Current.Hide();
             con.auxiliary = this;
             con.model.SetParent(content);
+            con.model.Context.SetParent(content.Context);
+            con.model.Context.localPosition = Vector3.zero;
             con.Head.SetParent(head);
+            con.Head.Context.SetParent(head.Context);
             contents.Add(con);
             Current = con;
             panel.Order();
@@ -269,6 +272,8 @@ namespace huqiang.UIComposite
                 var mod = contents[i].model;
                 mod.data.sizeDelta = content.data.sizeDelta;
             }
+            head.Context.sizeDelta = head.data.sizeDelta;
+            head.Context.localPosition = head.data.localPosition;
             panel.Order();
         }
         void SetTextSize(object obj)
@@ -276,12 +281,18 @@ namespace huqiang.UIComposite
             for(int i=0;i<contents.Count;i++)
             {
                 var it = contents[i];
-                float w = it.label.data.sizeDelta.x;
+                var txt = it.label.Main.GetComponent<Text>();
+                float w= txt.preferredWidth;
+                it.label.data.sizeDelta.x = w;
+                it.label.Context.sizeDelta = it.label.data.sizeDelta;
+                //float w = it.label.data.sizeDelta.x;
                 float fw = w + 40;
                 it.Head.data.sizeDelta.x = fw;
+                it.Head.Context.sizeDelta = it.Head.data.sizeDelta;
                 if(it.close!=null)
                 {
                     it.close.data.localPosition.x = w * 0.5f + 8;
+                    it.close.Context.localPosition = it.close.data.localPosition;
                 }
             }
             panel.Order();

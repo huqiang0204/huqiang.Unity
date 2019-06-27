@@ -53,6 +53,7 @@ namespace huqiang.UIComposite
                         c.Context.gameObject.SetActive(true);
                     }
                     sx += ix;
+                    c.Context.localPosition = c.data.localPosition;
                 }
             }
             else
@@ -79,6 +80,7 @@ namespace huqiang.UIComposite
                         c.Context.gameObject.SetActive(true);
                     }
                     sy -= iy;
+                    c.Context.localPosition = c.data.localPosition;
                 }
             }
         }
