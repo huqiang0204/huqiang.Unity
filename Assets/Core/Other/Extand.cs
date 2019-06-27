@@ -256,5 +256,22 @@ namespace huqiang
             }
             return buf;
         }
+        public static Vector3 ScreenToLocal(this RectTransform rect, Vector3 v)
+        {
+            v -= rect.position;
+            var sc = rect.lossyScale;
+            if (sc.x != 0)
+                v.x /= sc.x;
+            else v.x = 0;
+            if (sc.y != 0)
+                v.y /= sc.y;
+            else v.y = 0;
+            if (sc.z != 0)
+                v.z /= sc.z;
+            else v.z = 0;
+            var q = Quaternion.Inverse(rect.rotation);
+            v = q * v;
+            return v;
+        }
     }
 }

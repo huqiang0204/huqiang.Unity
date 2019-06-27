@@ -145,6 +145,8 @@ namespace huqiang.UIModel
         public string name;
         public string tag;
         public ModelElement parent { get; private set; }
+        bool _active = true;
+        public bool activeSelf { get { return _active; } set { if (_active == value) return;  _active = value; if (Main != null) Main.SetActive(value); } }
         public ElementData data;
         public List<DataConversion> components = new List<DataConversion>();
         public List<ModelElement> child = new List<ModelElement>();
@@ -244,7 +246,14 @@ namespace huqiang.UIModel
                 return ModData.buffer.GetData(data.ex) as FakeStruct;
             return null;
         }
-
+        public void ApplyPosSIze()
+        {
+            if (Context != null)
+            {
+                Context.localPosition = data.localPosition;
+                Context.sizeDelta = data.sizeDelta;
+            }
+        }
 #if UNITY_EDITOR
         public void AddSizeScale()
         {

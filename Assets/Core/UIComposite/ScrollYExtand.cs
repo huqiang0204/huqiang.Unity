@@ -19,7 +19,7 @@ namespace huqiang.UIComposite
         public Action<ScrollYExtand, Vector2> Scroll;
         public ScrollYExtand()
         { }
-        public override void Initial( ModelElement model)
+        public override void Initial(ModelElement model)
         {
             base.Initial(model);
             View = model.Context;
