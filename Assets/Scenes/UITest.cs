@@ -1,5 +1,5 @@
 ﻿using huqiang.Data;
-using huqiang.UI;
+using huqiang.UIModel;
 using huqiang.UIComposite;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,8 +22,8 @@ public class UITest : TestHelper
 #if UNITY_IPHONE || UNITY_ANDROID
         //Scale.DpiScale = true;
 #endif
-        //UIPage.LoadPage<DrawPage>();
-        UIPage.LoadPage<LayoutTestPage>();
+        UIPage.LoadPage<DrawPage>();
+        //UIPage.LoadPage<LayoutTestPage>();
         //UIPage.LoadPage<TestPage>();
     }
     public override void OnUpdate()

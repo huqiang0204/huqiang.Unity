@@ -20,26 +20,28 @@ public class TestHelper:UICompositeHelp
         ModelManagerUI.RegComponent(new ComponentType<Mask, MaskElement>(MaskElement.LoadFromObject));
         ModelManagerUI.RegComponent(new ComponentType<Outline, OutLineElement>(OutLineElement.LoadFromObject));
     }
-    public static void LoadAllBundle()
+    public virtual void LoadBundle()
     {
+#if UNITY_EDITOR
         if (ElementAsset.bundles.Count == 0)
         {
-            var dic = Application.dataPath + "/StreamingAssets";
+            //var dic = Application.dataPath + "/StreamingAssets";
+            var dic = Application.streamingAssetsPath;
             if (Directory.Exists(dic))
             {
                 var bs = Directory.GetFiles(dic, "*.unity3d");
                 for (int i = 0; i < bs.Length; i++)
                 {
-                    var ass = AssetBundle.LoadFromFile(bs[i]);
-                    ElementAsset.AddBundle(ass.name, ass);
+                    ElementAsset.AddBundle(AssetBundle.LoadFromFile(bs[i]));
                 }
             }
         }
+#endif
     }
     public string AssetName = "baseUI";
     private void Awake()
     {
-        LoadAllBundle();
+        LoadBundle();
         InitialUI();
         DataBuffer db = new DataBuffer(1024);
         db.fakeStruct = ModelElement.LoadFromObject(transform, db);
@@ -54,6 +56,7 @@ public class TestHelper:UICompositeHelp
         App.Initial(transform as RectTransform);
         LoadTestPage();
     }
+
     public virtual void LoadTestPage()
     {
     }
@@ -64,7 +67,6 @@ public class TestHelper:UICompositeHelp
     }
     public virtual void OnUpdate()
     {
-
     }
     private void OnDestroy()
     {

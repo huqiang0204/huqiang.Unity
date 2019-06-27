@@ -61,6 +61,10 @@ namespace huqiang
                 //NotifyControll.root = Hint;
             }
             else  UIRoot = uiRoot;
+            var root = ModelElement.CreateNew("uiRoot");
+            root.Context = uiRoot as RectTransform;
+            root.Main = uiRoot.gameObject;
+            UIPage.Root = root;
             UIRoot.sizeDelta = new Vector2(Screen.width, Screen.height);
 
             var buff = new GameObject("buffer",typeof(Canvas));

@@ -45,11 +45,11 @@ namespace huqiang.UIComposite
             htemp = rect.GetComponent<RawImage>();
             htemp.texture = Palette.LoadCTemplateAsync();
             template.texture = palette.texture;
-            slider.texture = Palette.AlphaTemplate();
             palette.LoadHSVTAsyncM(1);
             SelectColor.a = 1;
             var son = mod.Find("Slider");
             slider = son.Context.GetComponent<RawImage>();
+            slider.texture = Palette.AlphaTemplate();
             uISlider = new UISlider();
             uISlider.Initial(son);
             uISlider.OnValueChanged = AlphaChanged;

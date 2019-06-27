@@ -75,18 +75,23 @@ namespace huqiang.UIComposite
         public override void Initial(ModelElement mod)
         {
             var fill = mod.Find("FillImage");
-            fill.Instantiate();
+            if (fill != null)
+            {
+                fill.Instantiate();
+                FillImage = fill.Context;
+                image = FillImage.GetComponent<Image>();
+            }
             var nob = mod.Find("Nob");
-            nob.Instantiate();
+            if (nob != null)
+            {
+                nob.Instantiate();
+                Nob = nob.Context;
+            }
             model = mod.Context;
             callBack = EventCallBack.RegEvent<EventCallBack>(model);
             callBack.Drag = callBack.DragEnd = Draging;
             callBack.PointerDown = PointDown;
             callBack.AutoColor = false;
-            FillImage = fill.Context;
-            if (FillImage != null)
-                image = FillImage.GetComponent<Image>();
-            Nob = nob.Context;
             var fake = mod.GetExtand();
             if(fake!=null)
             {

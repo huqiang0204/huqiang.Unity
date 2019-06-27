@@ -41,9 +41,37 @@ namespace huqiang.UIModel
             }
             return null;
         }
-
+        public static Texture FindTexture(string bundle, string tname)
+        {
+            if (bundle == null)
+            {
+                return UnityEngine.Resources.Load<Texture>(tname);
+            }
+            if (bundles == null)
+                return null;
+            for (int i = 0; i < bundles.Count; i++)
+            {
+                var tmp = bundles[i];
+                if (bundle == tmp.name)
+                {
+                    return tmp.asset.LoadAsset<Texture>(tname);
+                }
+            }
+            return null;
+        }
         public static Sprite FindSprite(string bundle, string tname, string name)
         {
+            if (bundle == null)
+            {
+                var ss = UnityEngine.Resources.LoadAll<Sprite>(tname);
+                if (ss != null)
+                {
+                    for (int i = 0; i < ss.Length; i++)
+                        if (ss[i].name == name)
+                            return ss[i];
+                }
+                return null;
+            }
             if (bundles == null)
                 return null;
             for(int i=0;i<bundles.Count;i++)
@@ -96,6 +124,13 @@ namespace huqiang.UIModel
             BundleInfo b = new BundleInfo();
             b.name = name;
             b.asset = AssetBundle.LoadFromFile(dic);
+            bundles.Add(b);
+        }
+        public static void AddBundle(AssetBundle ab)
+        {
+            BundleInfo b = new BundleInfo();
+            b.name = ab.name;
+            b.asset = ab;
             bundles.Add(b);
         }
         public static Sprite[] FindSprites(string bundle, string tname, string[] names = null)

@@ -51,7 +51,7 @@ namespace huqiang.UIComposite
             if (window != null)
                 window.Dispose();
             var t = new T();
-            t.Initial(model.Context,null);
+            t.Initial(model,null);
             t.model.data.sizeDelta = model.data.sizeDelta;
             t.ReSize();
             window = t;

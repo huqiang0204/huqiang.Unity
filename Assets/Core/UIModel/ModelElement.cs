@@ -45,6 +45,16 @@ namespace huqiang.UIModel
     }
     public class ModelElement:DataConversion
     {
+        public static ModelElement CreateNew(string name)
+        {
+            var mod = new ModelElement();
+            mod.name = name;
+            mod.data.localScale = Vector3.one;
+            mod.data.localRotation = Quaternion.identity;
+            mod.data.anchorMax = mod.data.anchorMin =
+            mod.data.pivot = new Vector2(0.5f, 0.5f);
+            return mod;
+        }
         static void LoadToObject(RectTransform com, ref ElementData data, ModelElement ui)
         {
             var trans = com as RectTransform;
@@ -230,7 +240,10 @@ namespace huqiang.UIModel
         public void Instantiate()
         {
             if (Main == null)
+            {
                 Main = ModelManagerUI.CreateNew(data.type);
+                Context = Main.transform as RectTransform;
+            }
             if (parent != null)
                 if (Context.parent != parent.Context)
                     Context.SetParent(parent.Context);

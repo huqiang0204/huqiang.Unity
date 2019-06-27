@@ -35,7 +35,7 @@ namespace huqiang.UIComposite
         {
             T ui = new T();
             LinkerMod mod = new LinkerMod();
-            mod.main = ModelManagerUI.LoadToGame(model, ui, null);
+            mod.main = ModelManagerUI.LoadToGame(model, ui);
             mod.UI = ui;
             return mod;
         }
@@ -63,7 +63,7 @@ namespace huqiang.UIComposite
         public LinkerMod CreateUI()
         {
             LinkerMod mod = new LinkerMod();
-            mod.main = ModelManagerUI.LoadToGame(model, null, null);
+            mod.main = ModelManagerUI.LoadToGame(model, null);
             if (ItemCreate != null)
                 ItemCreate(this,mod);
             return mod;
