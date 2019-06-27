@@ -27,7 +27,8 @@ namespace huqiang.UIComposite
             layout = auxiliary.layoutArea.layout;
             model = new ModelElement();
             model.Load(aux.content.ModData);
-            model.SetParent(aux.content);
+            model.SetParent(aux.model);
+            ModelManagerUI.LoadToGame(model,null);
             InitialLabel();
         }
         public void Hide()
@@ -52,7 +53,10 @@ namespace huqiang.UIComposite
                 window.Dispose();
             var t = new T();
             t.Initial(model,null);
-            t.model.data.sizeDelta = model.data.sizeDelta;
+            if(t.model!=null)
+            {
+                t.model.data.sizeDelta = model.data.sizeDelta;
+            }
             t.ReSize();
             window = t;
         }
@@ -61,7 +65,8 @@ namespace huqiang.UIComposite
             Head = new ModelElement();
             Head.Load(auxiliary.Item.ModData);
             Head.SetParent(auxiliary.head);
-
+            ModelManagerUI.LoadToGame(Head,null);
+           
             label = Head.Find("Label");
             var eve = EventCallBack.RegEvent<EventCallBack>(label.Context);
             eve.PointerDown = HeadPointDown;
@@ -158,12 +163,16 @@ namespace huqiang.UIComposite
             layout = area.layout;
             model = new ModelElement();
             model.Load(area.layout.Auxiliary.ModData);
+            model.SetParent(area.model);
+            model.Instantiate();
             head = model.Find("Head");
+            head.Instantiate();
             headHigh = head.data.sizeDelta.y;
             docker = model.Find("Docker");
+            docker.Instantiate();
+            docker.InstantiateChild();
             docker.activeSelf = false;
             content = model.Find("Content");
-            model.SetParent(area.model);
             Item = model.Find("Item");
             Item.activeSelf = false;
             Cover = model.Find("Cover");

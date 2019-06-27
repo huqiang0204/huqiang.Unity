@@ -4,6 +4,7 @@ using huqiang.UIModel;
 using huqiang.UIComposite;
 using huqiang.UIEvent;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LayoutTestPage : UIPage
 {
@@ -15,31 +16,31 @@ public class LayoutTestPage : UIPage
     public override void Initial(ModelElement parent, object dat = null)
     {
         model = ModelManagerUI.CloneModel("baseUI", "layout");
+        view = LoadUI<View>("baseUI", "layout");
         base.Initial(parent, dat);
-        //view = model.ComponentReflection<View>();
-        //var area = view.Layout.MainArea;
-        //area.auxiliary.AddContent("page0");
-        //var d = area.AddArea(LayoutArea.Dock.Down,0.3f);
-        //var context = d.auxiliary.AddContent("page1");
+        var area = view.Layout.MainArea;
+        area.auxiliary.AddContent("page0");
+        var d = area.AddArea(LayoutArea.Dock.Down, 0.3f);
+        var context = d.auxiliary.AddContent("page1");
 
-        //d.model.GetComponent<ImageElement>().color = Color.red;
-        //var one = d.AddArea(LayoutArea.Dock.Right,0.4f);
-        //context = one.auxiliary.AddContent("page2");
-        //context.LoadPopWindow<GridTestWindow>();
-        //d.auxiliary.Refresh();
+        d.model.Context.GetComponent<Image>().color = Color.red;
+        var one = d.AddArea(LayoutArea.Dock.Right, 0.4f);
+        context = one.auxiliary.AddContent("page2");
+        context.LoadPopWindow<GridTestWindow>();
+        d.auxiliary.Refresh();
 
-        //one.model.GetComponent<ImageElement>().color = Color.green;
-        //var top= area.AddArea(LayoutArea.Dock.Top,0.2f);
-        //top.auxiliary.AddContent("page3");
-        //top.model.GetComponent<ImageElement>().color = Color.yellow;
+        one.model.Context.GetComponent<Image>().color = Color.green;
+        var top = area.AddArea(LayoutArea.Dock.Top, 0.2f);
+        top.auxiliary.AddContent("page3");
+        top.model.Context.GetComponent<Image>().color = Color.yellow;
 
-        //var l= top.AddArea(LayoutArea.Dock.Left,0.4f);
-        //l.model.GetComponent<ImageElement>().color = Color.blue;
-        //l.auxiliary.headDock = LayoutAuxiliary.HeadDock.Down;
+        var l = top.AddArea(LayoutArea.Dock.Left, 0.4f);
+        l.model.Context.GetComponent<Image>().color = Color.blue;
+        l.auxiliary.headDock = LayoutAuxiliary.HeadDock.Down;
 
-        //context = l.auxiliary.AddContent("page5");
-        //context.LoadPopWindow<GridTestWindow2>();
-        //l.auxiliary.Refresh();
+        context = l.auxiliary.AddContent("page5");
+        context.LoadPopWindow<GridTestWindow2>();
+        l.auxiliary.Refresh();
     } 
 }
 public class GridTestWindow : PopWindow
@@ -55,8 +56,8 @@ public class GridTestWindow : PopWindow
     View view;
     public override void Initial(ModelElement parent, UIPage ui, object obj = null)
     {
-        model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
-        base.Initial(parent, ui, obj);
+       // model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
+       // base.Initial(parent, ui, obj);
         //view = model.ComponentReflection<View>();
 
         //List<int> testData = new List<int>();
@@ -94,8 +95,8 @@ public class GridTestWindow2 : PopWindow
     View view;
     public override void Initial(ModelElement parent, UIPage ui, object obj = null)
     {
-        model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
-        base.Initial(parent, ui, obj);
+        //model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
+        //base.Initial(parent, ui, obj);
         //view = model.ComponentReflection<View>();
 
         //List<int> testData = new List<int>();

@@ -25,6 +25,7 @@ namespace huqiang.UIComposite
             layout = lay;
             layout.lines.Add(this);
             model = mod;
+            mod.SetParent(layout.LineLevel);
             if (real)
             {
                 mod.Instantiate();
@@ -46,7 +47,7 @@ namespace huqiang.UIComposite
                 //};
 #endif
             }
-            mod.SetParent(layout.LineLevel);
+   
         }
         void Drag(EventCallBack callBack,UserAction action,Vector2 v)
         {
@@ -296,6 +297,7 @@ namespace huqiang.UIComposite
             model.Load(layout.AreaMod.ModData);
             layout = lay;
             model.SetParent(layout.AreaLevel);
+            model.Instantiate();
             layout.areas.Add(this);
             if (lay.Auxiliary != null)
                 auxiliary = new LayoutAuxiliary(this);
@@ -582,9 +584,13 @@ namespace huqiang.UIComposite
         {
             model = mod;
             LineLevel = mod.Find("LineLevel");
+            LineLevel.Instantiate();
             AreaLevel= mod.Find("AreaLevel");
+            AreaLevel.Instantiate();
             LineMod = mod.Find("Line");
+            LineMod.Instantiate();
             AreaMod = mod.Find("Area");
+            AreaMod.Instantiate();
             Auxiliary = mod.Find("Auxiliary");
             Drag = mod.Find("Drag");
             model.SizeChanged = SizeChanged;

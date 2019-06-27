@@ -126,7 +126,6 @@ namespace huqiang.UIComposite
                 label:;
                 }
             }
-
         }
         void FillColor(Vector2 p)
         {
