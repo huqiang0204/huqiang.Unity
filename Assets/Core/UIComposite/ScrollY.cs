@@ -82,6 +82,7 @@ namespace huqiang.UIComposite
                 if (eventCall.VelocityY== 0)
                     OnScrollEnd(o);
             };
+            model.SizeChanged = (o) => { Refresh( 0,m_point); };
             eventCall.Scrolling = Scrolling;
             eventCall.ScrollEndY = OnScrollEnd;
             eventCall.ForceEvent = true;

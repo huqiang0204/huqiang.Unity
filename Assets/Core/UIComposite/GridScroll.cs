@@ -55,6 +55,7 @@ namespace huqiang.UIComposite
             eventCall.DragEnd = (o, e, s) => { Scrolling(o, s); };
             eventCall.Scrolling = Scrolling;
             eventCall.ForceEvent = true;
+            model.SizeChanged = (o) => { Refresh(Position); };
             Size = ScrollView.sizeDelta;
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = ScrollContent.Center;
             eventCall.CutRect = true;

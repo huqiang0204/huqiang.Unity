@@ -56,6 +56,7 @@ namespace huqiang.UIComposite
         }
         public override void Initial(ModelElement model)
         {
+            base.Initial(model);
             ScrollView = model.Context;
             eventCall = EventCallBack.RegEvent<EventCallBack>(ScrollView);
             eventCall.Drag = Draging;
@@ -68,15 +69,14 @@ namespace huqiang.UIComposite
                 if (eventCall.VelocityX == 0)
                     OnScrollEnd(o);
             };
+            model.SizeChanged = (o) => { Refresh(m_point,0); };
             eventCall.Scrolling = Scrolling;
-            eventCall.PointerUp = (o, e) => { };
             eventCall.ScrollEndX = OnScrollEnd;
             eventCall.ForceEvent = true;
             eventCall.AutoColor = false;
             Size = ScrollView.sizeDelta;
             ScrollView.anchorMin = ScrollView.anchorMax = ScrollView.pivot = Center;
             eventCall.CutRect = true;
-            Model = model;
         }
         void Draging(EventCallBack back, UserAction action, Vector2 v)
         {
@@ -248,7 +248,6 @@ namespace huqiang.UIComposite
                 e = er - sr;
                 RecycleOutside(sr, er);
             }
-
             PushItems();//将未被回收的数据压入缓冲区
             int index = sr;
             float ox = 0;

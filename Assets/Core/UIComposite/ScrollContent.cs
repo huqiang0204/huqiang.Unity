@@ -143,6 +143,7 @@ namespace huqiang.UIComposite
         Constructor creator;
         public override void Initial(ModelElement model)
         {
+            Model = model;
             ScrollView = model.Context;
             var child = model.child;
             int c = child.Count;
@@ -185,11 +186,14 @@ namespace huqiang.UIComposite
             }
             GameObject go = null;
             ScrollItem a = new ScrollItem();
+            ModelElement model = new ModelElement();
+            model.Load(ItemMod.ModData);
+            model.SetParent(Model);
             if (creator != null)
             {
                 if (creator.hotfix)
                 {
-                    go = ModelManagerUI.LoadToGame(ItemMod, null);
+                    go = ModelManagerUI.LoadToGame(model, null);
                     if (creator.reflect != null)
                         a.obj = creator.reflect(go);
                     else a.obj = go;
@@ -198,12 +202,12 @@ namespace huqiang.UIComposite
                 else
                 {
                     a.obj = creator.Create();
-                    go = ModelManagerUI.LoadToGame(ItemMod, a.obj);
+                    go = ModelManagerUI.LoadToGame(model, a.obj);
                     a.target = go;
                 }
             }
             else {
-                go = ModelManagerUI.LoadToGame(ItemMod, null);
+                go = ModelManagerUI.LoadToGame(model, null);
                 a.target = go;
                 a.obj = go;
             }
@@ -283,6 +287,7 @@ namespace huqiang.UIComposite
             }
             Items.Clear();
             Recycler.Clear();
+            Model.child.Clear();
         }
         protected void PushItems()
         {

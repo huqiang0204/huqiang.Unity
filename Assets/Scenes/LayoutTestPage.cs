@@ -51,26 +51,28 @@ public class GridTestWindow : PopWindow
     }
     class Item
     {
-        public TextElement Text;
+        public Text Text;
     }
     View view;
     public override void Initial(ModelElement parent, UIPage ui, object obj = null)
     {
-       // model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
-       // base.Initial(parent, ui, obj);
-        //view = model.ComponentReflection<View>();
+        view = LoadUI<View>("baseUI", "gridscroll");
+        base.Initial(parent, ui, obj);
 
-        //List<int> testData = new List<int>();
-        //for (int i = 0; i < 33; i++)
-        //    testData.Add(i);
-        //view.Scroll.BindingData = testData;
-        //view.Scroll.SetItemUpdate<Item,int>( (o, e,  i) => { o.Text.text = i.ToString();});
-        //view.Scroll.Refresh();
-        //view.Scroll.eventCall.Click = (o, e) => {
-        //    if (e.IsRightButtonUp)
-        //        UIMenu.Instance.ShowMenu<TestMenu>(this,e.CanPosition);
-        //    Debug.Log("click");
-        //};
+        List<int> testData = new List<int>();
+        for (int i = 0; i < 33; i++)
+            testData.Add(i);
+        view.Scroll.BindingData = testData;
+        view.Scroll.SetItemUpdate<Item, int>((o, e, i) => {
+            o.Text.text = i.ToString();
+        });
+        view.Scroll.Refresh();
+        view.Scroll.eventCall.Click = (o, e) =>
+        {
+            //if (e.IsRightButtonUp)
+            //    UIMenu.Instance.ShowMenu<TestMenu>(this, e.CanPosition);
+            Debug.Log("click");
+        };
     }
     public override void Cmd(string cmd, object dat)
     {
@@ -90,21 +92,23 @@ public class GridTestWindow2 : PopWindow
     }
     class Item
     {
-        public TextElement Text;
+        public Text Text;
     }
     View view;
     public override void Initial(ModelElement parent, UIPage ui, object obj = null)
     {
-        //model = ModelManagerUI.CloneModel("baseUI", "gridscroll");
-        //base.Initial(parent, ui, obj);
-        //view = model.ComponentReflection<View>();
+        view = LoadUI<View>("baseUI", "gridscroll");
+        base.Initial(parent, ui, obj);
 
-        //List<int> testData = new List<int>();
-        //for (int i = 0; i < 44; i++)
-        //    testData.Add(i);
-        //view.Scroll.BindingData = testData;
-        //view.Scroll.SetItemUpdate<Item,int>( (o, e, i) => {o.Text.text = i.ToString();});
-        //view.Scroll.Refresh();
+        List<int> testData = new List<int>();
+        for (int i = 0; i < 44; i++)
+            testData.Add(i);
+        view.Scroll.BindingData = testData;
+        view.Scroll.SetItemUpdate<Item, int>((o, e, i) => {
+            o.Text.text = i.ToString();
+            Debug.Log(i.ToString());
+        });
+        view.Scroll.Refresh();
     }
 }
 //public class TestMenu : MenuWindow

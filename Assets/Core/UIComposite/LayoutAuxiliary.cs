@@ -25,10 +25,11 @@ namespace huqiang.UIComposite
             auxiliary = aux;
             name = nam;
             layout = auxiliary.layoutArea.layout;
-            model = new ModelElement();
-            model.Load(aux.content.ModData);
-            model.SetParent(aux.model);
-            ModelManagerUI.LoadToGame(model,null);
+            model = aux.content;
+            //model = new ModelElement();
+            //model.Load(aux.content.ModData);
+            //model.SetParent(aux.model);
+            //ModelManagerUI.LoadToGame(model,null);
             InitialLabel();
         }
         public void Hide()
@@ -173,6 +174,7 @@ namespace huqiang.UIComposite
             docker.InstantiateChild();
             docker.activeSelf = false;
             content = model.Find("Content");
+            content.Instantiate();
             Item = model.Find("Item");
             Item.activeSelf = false;
             Cover = model.Find("Cover");
@@ -274,6 +276,11 @@ namespace huqiang.UIComposite
             }
             head.Context.sizeDelta = head.data.sizeDelta;
             head.Context.localPosition = head.data.localPosition;
+            if(content.Context!=null)
+            {
+                content.Context.sizeDelta = content.data.sizeDelta;
+                content.Context.localPosition = content.data.localPosition;
+            }
             panel.Order();
         }
         void SetTextSize(object obj)
